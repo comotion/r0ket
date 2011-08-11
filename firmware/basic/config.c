@@ -1,6 +1,8 @@
 #include <sysinit.h>
 #include "basic/basic.h"
 
+// ToDo: Add variable message received
+
 #include "lcd/display.h"
 #include "lcd/print.h"
 #include "filesystem/ff.h"

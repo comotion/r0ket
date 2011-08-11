@@ -1,6 +1,8 @@
 #ifndef __BASICCONFIG_H_
 #define __BASICCONFIG_H_
 
+// ToDo: Add variable message received
+
 int readConfig(void);
 int saveConfig(void);
 void applyConfig(void);
