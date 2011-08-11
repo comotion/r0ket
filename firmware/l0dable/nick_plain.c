@@ -11,6 +11,9 @@
 void ram(void) {
     int dx=0;
 	int dy=0;
+    int msgdx=0;
+    int msgshow=1;
+    int msgdy=0;
     static uint32_t ctr=0;
 	ctr++;
 
@@ -27,6 +30,14 @@ void ram(void) {
 	lcdRefresh();
 
     while(getInputRaw()==BTN_NONE){
+
+	if (GLOBAL(newmsgflag) && msgshow)
+	{
+		msgshow = 0;
+		DoString(msgdx,msgdy,"New Message");
+		lcdRefresh();
+	}
+
         delayms_queue_plus(10,0);
     };
     return;
