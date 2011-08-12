@@ -83,7 +83,7 @@ void ram(void) {
         DoString(nickx,nicky,GLOBAL(nickname));
         DoString(nickx+nickwidth+nickoff,nicky,GLOBAL(nickname));
         if(nickwidth<RESX) DoString(nickx+2*(nickwidth+nickoff),nicky,GLOBAL(nickname));
-        if (GLOBAL(newmsgflag)) {
+        if (GLOBAL(newmsgcount)) {
             DoString(msgdx,msgdy,"New Message");
         }
     char key=stepmode?getInputWait():getInputRaw();

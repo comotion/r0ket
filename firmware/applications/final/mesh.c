@@ -145,7 +145,7 @@ void m_choose(){
     char list[99];
     int i=0;
 
-    GLOBAL(newmsgflag) = 0;
+    GLOBAL(newmsgcount) = 0;
 
     meshmsg=0;
     gpioSetValue (RB_LED1, 0);

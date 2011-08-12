@@ -257,8 +257,8 @@ uint8_t mesh_recvqloop_work(void){
         memcpy(mpkt->pkt,buf,MESHPKTSIZE);
         mpkt->flags=MF_USED;
 
-        GLOBAL(newmsgflag) = 1;
-		GLOBAL(newmsg) = (char *)MO_BODY(buf);
+        GLOBAL(newmsgcount)++;
+		GLOBAL(newmsg) = MO_TYPE(buf);
 
         return 1;
 };

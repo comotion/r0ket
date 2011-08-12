@@ -101,7 +101,7 @@ mygmtime
 nickfont
 nickname
 newmsg
-newmsgflag
+newmsgcount
 systickGetTicks
 uint32touint8p
 uint8ptouint32

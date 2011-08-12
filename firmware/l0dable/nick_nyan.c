@@ -47,7 +47,7 @@ void ram(void) {
         setExtFont(GLOBAL(nickfont));
         DoString(5, dy, GLOBAL(nickname));
 
-        if (GLOBAL(newmsgflag)) {
+        if (GLOBAL(newmsgcount)) {
             DoString(msgdx,msgdy,"New Message");
         }
 

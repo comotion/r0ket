@@ -27,8 +27,8 @@ extern struct CDESC the_config[];
 extern char nickname[];
 extern char nickfont[];
 extern char nickl0[];
-extern char *newmsg;
-extern bool newmsgflag;
+extern char newmsg;
+extern int newmsgcount;
 
 #define GLOBALversion      (the_config[ 0].value)
 #define GLOBALprivacy      (the_config[ 1].value)
@@ -53,7 +53,7 @@ extern bool newmsgflag;
 #define GLOBALnickfont     (nickfont)
 #define GLOBALnickl0       (nickl0)
 #define GLOBALnewmsg       (newmsg)
-#define GLOBALnewmsgflag   (newmsgflag)
+#define GLOBALnewmsgcount   (newmsgcount)
 
 #define GLOBAL(x) GLOBAL ## x
 

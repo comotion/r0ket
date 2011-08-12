@@ -70,7 +70,7 @@ void ram(void) {
         DoString(nickx+nickwidth+nickoff,nicky,nick);
         if(nickwidth<RESX) DoString(nickx+2*(nickwidth+nickoff),nicky,nick);
 
-        if (GLOBAL(newmsgflag)) {
+        if (GLOBAL(newmsgcount)) {
             DoString(msgdx,msgdy,"New Message");
         }
 

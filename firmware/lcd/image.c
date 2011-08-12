@@ -36,7 +36,7 @@ uint8_t lcdShowAnim(char *fname, uint32_t framems) {
             f_lseek(&file,0);
             continue;
         };
-        if (GLOBAL(newmsgflag)) {
+        if (GLOBAL(newmsgcount)) {
             DoString(msgdx,msgdy,"New Message");
         }
         lcdDisplay();
