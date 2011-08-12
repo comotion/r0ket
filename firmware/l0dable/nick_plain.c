@@ -35,7 +35,7 @@ void ram(void) {
         if (GLOBAL(newmsgcount) > msgcount) {
             msgcount = GLOBAL(newmsgcount);
             setExtFont("Font_3x6");
-			lcdSetCrsr(0,0);
+            //lcdSetCrsr(0,0);
             lcdPrint("new msgs: ");
             lcdPrintln(IntToStr(GLOBAL(newmsgcount),2,0));
             lcdRefresh();
@@ -48,7 +48,7 @@ void ram(void) {
         for(int z=0;z<MESHBUFSIZE;z++) {
             if (MO_TYPE(meshbuffer[z].pkt) == GLOBAL(newmsg))
                 msg = (char *)MO_BODY(meshbuffer[z].pkt);
-		};
+        };
         while(strlen(msg)>13){
             int q;
             for(q=0;q<13;q++){
