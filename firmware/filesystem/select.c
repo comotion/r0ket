@@ -8,6 +8,8 @@
 
 #define FLEN 13
 
+// filles files with the filenames matching ext
+// if count is set to 0xff (-1) do not fill files and return the count instead
 int getFiles(char files[][FLEN], uint8_t count, uint16_t skip, char *ext)
 {
     DIR dir;                /* Directory object */
@@ -37,7 +39,9 @@ int getFiles(char files[][FLEN], uint8_t count, uint16_t skip, char *ext)
             continue;
         };
 
-        strcpy(files[pos++],Finfo.fname);
+        if(count != 0xff)
+            strcpy(files[pos],Finfo.fname);
+        pos++;
         if( pos == count )
             break;
     }
@@ -50,6 +54,8 @@ int selectFile(char *filename, char *extension)
     int skip = 0;
     char key;
     int selected = 0;
+    int file_count = getFiles(NULL, -1, 0, extension);
+    
     font=&Font_7x8;
     while(1){
         char files[PERPAGE][FLEN];
@@ -96,7 +102,11 @@ int selectFile(char *filename, char *extension)
                     selected++;
                     goto redraw;
                 }else{
-                    skip++;
+                    if(skip == file_count - PERPAGE) { // wrap to top
+                        selected = 0;
+                        skip = 0;
+                    } else 
+                        skip++;
                 }
                 break;
             case BTN_UP:
@@ -106,6 +116,10 @@ int selectFile(char *filename, char *extension)
                 }else{
                     if( skip > 0 ){
                         skip--;
+                    } else { // wrap to button
+                        skip = file_count - PERPAGE;
+                        if(skip < 0) skip = 0;
+                        selected = file_count - skip - 1;
                     }
                 }
                 break;
