@@ -100,6 +100,8 @@ menuflags
 mygmtime
 nickfont
 nickname
+newmsg
+newmsgflag
 systickGetTicks
 uint32touint8p
 uint8ptouint32
