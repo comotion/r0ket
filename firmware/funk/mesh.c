@@ -256,7 +256,8 @@ uint8_t mesh_recvqloop_work(void){
             if(MO_TIME(buf)<=MO_TIME(mpkt->pkt))
                 return 2;
 
-        if(MO_TYPE(buf)>='A' && MO_TYPE(buf)<='C')
+        if((MO_TYPE(buf)>='A' && MO_TYPE(buf)<='C') ||
+                (MO_TYPE(buf)>='a' && MO_TYPE(buf)<='c'))
                     meshmsg=1;
 
         memcpy(mpkt->pkt,buf,MESHPKTSIZE);
