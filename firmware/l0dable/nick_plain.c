@@ -34,7 +34,7 @@ void ram(void) {
     while(getInputRaw()==BTN_NONE){
         if (GLOBAL(newmsgcount) > msgcount) {
             msgcount = GLOBAL(newmsgcount);
-            setExtFont("Font_3x6");
+            setExtFont("Font_8x8");
             //lcdSetCrsr(0,0);
             lcdPrint("new msgs: ");
             lcdPrintln(IntToStr(GLOBAL(newmsgcount),2,0));
@@ -46,9 +46,14 @@ void ram(void) {
     if (getInputRaw()==BTN_UP && GLOBAL(newmsgcount) > 0) {
         char *msg;
         for(int z=0;z<MESHBUFSIZE;z++) {
-            if (MO_TYPE(meshbuffer[z].pkt) == GLOBAL(newmsg))
+            if (MO_TYPE(meshbuffer[z].pkt) == GLOBAL(newmsg)) {
                 msg = (char *)MO_BODY(meshbuffer[z].pkt);
+                break;
+            }
         };
+        setExtFont("Font_8x8");
+        lcdPrint(IntToStr(GLOBAL(newmsg),2,0));
+        lcdPrintln(": ");
         while(strlen(msg)>13){
             int q;
             for(q=0;q<13;q++){
@@ -64,7 +69,6 @@ void ram(void) {
         lcdRefresh();
 
         getInputWaitRelease();
-        //GLOBAL(newmsg) =
         GLOBAL(newmsgcount) = 0;
     }
     return;
