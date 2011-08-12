@@ -59,6 +59,7 @@ echo "###"
 cp ../tools/font/binary/*.f0n $TARG/files/
 cp ../tools/image/lcd/*.lcd $TARG/files/
 cp ../tools/image/lcd/i42.lcd $TARG/files/nick.lcd
+cp ../cfg/*.CFG $TARG/files/
 
 echo "###"
 echo "### Gathering loadables"
