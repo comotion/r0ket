@@ -38,11 +38,15 @@ int choose(char * texts, int8_t menuselection){
 
     visible_lines = (RESY/getFontHeight())-1; // subtract title line
 
+
     while (1) {
         // Display current menu page
         lcdClear();
-        if (menuselection <= 7)
+        if (menuselection < 7) {
             lcdPrintln(texts);
+	} else {
+		current_offset= ((numentries-1)/visible_lines) * visible_lines;
+	}
         p=texts;
         while(*p++);
         for(int i=0;i<current_offset;i++)
