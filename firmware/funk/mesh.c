@@ -23,10 +23,10 @@ void initMesh(void){
     for(int i=0;i<MESHBUFSIZE;i++){
         meshbuffer[i].flags=MF_FREE;
     };
-    memset(meshbuffer[0].pkt,0,MESHPKTSIZE);
-    meshbuffer[0].pkt[0]='T';
-    MO_TIME_set(meshbuffer[0].pkt,getSeconds());
-    meshbuffer[0].flags=MF_USED;
+    memset(meshbuffer[MESH_PACKET_INDEX_TIME].pkt,0,MESHPKTSIZE);
+    meshbuffer[MESH_PACKET_INDEX_TIME].pkt[0]='T';
+    MO_TIME_set(meshbuffer[MESH_PACKET_INDEX_TIME].pkt,getSeconds());
+    meshbuffer[MESH_PACKET_INDEX_TIME].flags=MF_USED;
 };
 
 int mesh_sanity(uint8_t * pkt){
@@ -58,7 +58,7 @@ MPKT * meshGetMessage(uint8_t type){
         };
     };
     if(free==-1){ // Buffer full. Ah well. Kill a random packet
-        free=1; // XXX: GetRandom()?
+        free=MESH_PACKET_RANDOM; // XXX: GetRandom()?
         meshbuffer[free].flags=MF_FREE;
     };
     if(meshbuffer[free].flags==MF_FREE){
@@ -123,21 +123,21 @@ void mesh_sendloop(void){
     nrf_set_tx_mac(strlen(MESH_MAC),(uint8_t*)MESH_MAC);
 
     // Update [T]ime packet
-    MO_TIME_set(meshbuffer[0].pkt,getSeconds());
-    MO_GEN_set(meshbuffer[0].pkt,meshgen);
+    MO_TIME_set(meshbuffer[MESH_PACKET_INDEX_TIME].pkt,getSeconds());
+    MO_GEN_set(meshbuffer[MESH_PACKET_INDEX_TIME].pkt,meshgen);
     if(GLOBAL(privacy)==0)
-        uint32touint8p(GetUUID32(),meshbuffer[0].pkt+26);
+        uint32touint8p(GetUUID32(),meshbuffer[MESH_PACKET_INDEX_TIME].pkt+26);
     else
-        uint32touint8p(0,meshbuffer[0].pkt+26);
+        uint32touint8p(0,meshbuffer[MESH_PACKET_INDEX_TIME].pkt+26);
 
-    MO_BODY(meshbuffer[0].pkt)[4]=meshnice;
+    MO_BODY(meshbuffer[MESH_PACKET_INDEX_TIME].pkt)[4]=meshnice;
 
     for (int i=0;i<MESHBUFSIZE;i++){
         if(!meshbuffer[i].flags&MF_USED)
             continue;
         if(meshbuffer[i].flags&MF_LOCK)
             continue;
-        if(meshnice&0xf){
+        if(meshnice&0xf){ // reduce the send rate
             if((rnd++)%0xf < (meshnice&0x0f)){
                 meshincctr++;
                 continue;
@@ -194,7 +194,12 @@ uint8_t mesh_recvqloop_work(void){
             return 0;
         };
 
-        if(MO_GEN(buf)>meshgen){
+        if(MO_GEN(buf) == 0xff) {
+            /* maximum mesh-gen reached, reset to 0
+             *  this way all new clients always get reset to 0
+             *  until all clients are at 0 */
+            meshgen = meshincctr = meshnice = 0;
+        } else if(MO_GEN(buf) > meshgen){
             if(meshgen)
                 meshgen++;
             else
@@ -204,7 +209,7 @@ uint8_t mesh_recvqloop_work(void){
             meshnice=0;
         };
 
-        if(MO_TYPE(buf)=='T'){
+        if(MO_TYPE(buf)=='T'){ // time update
             time_t toff=MO_TIME(buf)-((getTimer()+(600/SYSTICKSPEED))/(1000/SYSTICKSPEED));
             if (toff>_timet){ // Do not live in the past.
                 _timet = toff;
@@ -223,6 +228,7 @@ uint8_t mesh_recvqloop_work(void){
 
         // Schnitzel
         if(MO_TYPE(buf)=='Z'){
+            // the packet is locked, it will not be sent!
             mpkt->flags=MF_USED|MF_LOCK;
             MO_TIME_set(mpkt->pkt,getSeconds());
             MO_GEN_set(mpkt->pkt,0x70);
@@ -250,8 +256,7 @@ uint8_t mesh_recvqloop_work(void){
             if(MO_TIME(buf)<=MO_TIME(mpkt->pkt))
                 return 2;
 
-        if((MO_TYPE(buf)>='A' && MO_TYPE(buf)<='C') ||
-                (MO_TYPE(buf)>='A' && MO_TYPE(buf)<='C'))
+        if(MO_TYPE(buf)>='A' && MO_TYPE(buf)<='C')
                     meshmsg=1;
 
         memcpy(mpkt->pkt,buf,MESHPKTSIZE);

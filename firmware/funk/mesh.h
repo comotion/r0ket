@@ -2,8 +2,24 @@
 #define __MESH_H_
 
 #define MESHBUFSIZE 10
-#define MESHPKTSIZE 32
+// buffer:
+#define MESH_PACKET_INDEX_TIME 0
+#define MESH_PACKET_RANDOM 1 // XXX: getRandom()
 
+#define MESHPKTSIZE 32
+// MESH PACKET
+// 01234567890123456789012345678901
+// TGttttDDDDDDDDDDDDDDDDDDDDDDDDCC
+// T: type
+//  G: generation
+//   tttt: time
+//       DD...: data body
+//            CC: crc
+
+/* packet types:
+ i: invaders high score
+ T: current time broadcast
+*/
 #define M_SENDINT 500
 #define M_RECVINT 1000
 #define M_RECVTIM 100
