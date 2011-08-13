@@ -2,7 +2,7 @@
  * snake
  ********
  *   a snake clone for the r0ket
- *   created by Flori4n & MascH (CCCHB tent)
+ *   created by Flori4n (DrivenHoliday) & MascH (CCCHB tent)
  ***************************************/
 
 #include <sysinit.h>
@@ -17,6 +17,7 @@
 #include "lcd/fonts/invaders.h"
 //#Include "lcd/lcd.h"
 //#include "lcd/print.h"
+#include "funk/mesh.h"
 #include "usetable.h"
 
 #define MAX_SNAKE_LEN (40)
@@ -262,15 +263,46 @@ static void death_anim()
 
 }
 
+static bool highscore_set(uint32_t score, char nick[]) {
+    MPKT * mpkt= meshGetMessage('s');
+    if(MO_TIME(mpkt->pkt)>score)
+        return false;
+
+    MO_TIME_set(mpkt->pkt,score);
+    strcpy((char*)MO_BODY(mpkt->pkt),nick);
+    if(GLOBAL(privacy)==0){
+        uint32touint8p(GetUUID32(),mpkt->pkt+26);
+        mpkt->pkt[25]=0;
+    };
+	return true;
+}
+
+static uint32_t highscore_get(char nick[]){
+    MPKT * mpkt= meshGetMessage('s');
+    char * packet_nick = (char*)MO_BODY(mpkt->pkt);
+    // the packet crc end is already zeroed
+    if(MAXNICK<MESHPKTSIZE-2-6-1)
+        packet_nick[MAXNICK-1] = 0;
+    strcpy(nick, packet_nick);
+	return MO_TIME(mpkt->pkt);
+}
+
 static int showHighscore()
 {
   int key = getInputRaw(); //throw away pending keypress
+  char nick[20];
+  uint32_t score = 0;
+
+  highscore_set(points,GLOBAL(nickname));
+  score = highscore_get(nick);
 
   lcdClear();
-  DoString(0,RESY/2-25, "  Your Score");
-  DoInt(RESX/2-4, RESY/2-10, points);
-  DoString(0, RESY/2+10, "  UP to play ");
-  DoString(0, RESY/2+18, "DOWN to quit ");
+  DoString(0,RESY/2-33, "  Your Score");
+  DoInt(RESX/2-4, RESY/2-25, points);
+  DoString(0,RESY/2-10, "  Highscore");
+  DoInt(RESX/2-4, RESY/2-2, score);
+  DoString(0, RESY/2+18, "  UP to play ");
+  DoString(0, RESY/2+26, "DOWN to quit ");
   
   lcdDisplay();
   

@@ -173,6 +173,9 @@ void m_choose(){
             case('r'):
                 strcpy(p,"r0type");
                 break;
+            case('s'):
+                strcpy(p,"Snake");
+                break;
             default:
                 p[0]=*mm;
                 p[1]=0;
@@ -214,6 +217,9 @@ void m_choose(){
             break;
         case('r'):
             strcpy(p,"r0type");
+            break;
+        case('s'):
+            strcpy(p,"Snake");
             break;
     };
     if(tmm[i]>='a' && tmm[i]<='z'){
