@@ -7,7 +7,7 @@
 #include "basic/random.h"
 
 #define GAME_SPEED (1000 / 20)
-#define NICK_LEN 16
+#define NICK_LEN 32
 #define NICK_BUFFER_SIZE 4
 
 #define MAX_AGE 20
@@ -36,6 +36,15 @@ RadarNick;
 
 RadarNick radar_buffer[NICK_BUFFER_SIZE];
 
+void debug_crash(char *str)
+{
+    while(true){ 
+        lcdClear();
+        lcdPrintln(str);
+        lcdDisplay();
+    }
+}
+
 void init_radar_buffer()
 {
     for (int i = 0; i < NICK_BUFFER_SIZE; i++)
@@ -49,7 +58,7 @@ void draw_radar()
 {
     for (int i = 0; i < NICK_BUFFER_SIZE; i++)
     {
-        if (radar_buffer[i].age < MAX_AGE)
+        //if (radar_buffer[i].age < MAX_AGE)
             lcdPrintln(radar_buffer[i].nick);
     }
 }
@@ -68,12 +77,12 @@ void load_nick(){
     nick[readbytes] = 0;
 }
 
-void found_rocket(char *nick)
+void found_rocket(char *new_nick)
 {
     int oldest = 0;
     for (int i = 0; i < NICK_BUFFER_SIZE; i++)
     {
-        if(strcmp(nick, radar_buffer[i].nick) == 0)
+        if(strcmp(new_nick, radar_buffer[i].nick) == 0)
         {
             radar_buffer[i].age = 0;
             return;
@@ -82,7 +91,7 @@ void found_rocket(char *nick)
             oldest = i;
     }
     radar_buffer[oldest].age = 0;
-    strcpy(radar_buffer[oldest].nick, nick);
+    strcpy(radar_buffer[oldest].nick, new_nick);
 }
 
 void find_rockets()
@@ -92,7 +101,7 @@ void find_rockets()
     int max_time = (getRandom() % 50) + 50; // avoid sync rockets
     if (nrf_rcv_pkt_time(max_time, NICK_LEN, buf))
     {
-        buf[NICK_LEN] = 0;
+        buf[NICK_LEN] = "\0";
         found_rocket(buf);
     }
     nrf_rcv_pkt_end();
@@ -105,8 +114,10 @@ void run_game()
     increment_age();
     find_rockets();
     draw_radar();
-    for(int i=0; i < 10; i++)
+    for(int i=0; i < 4; i++)
+    {
         nrf_snd_pkt_crc(NICK_LEN, nick);
+    }
 }
 
 void title_screen()
