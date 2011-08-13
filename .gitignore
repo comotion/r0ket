@@ -3,4 +3,5 @@
 *.a
 *.swp
 release
-.DS_Store
+*.project
+*.cproject
