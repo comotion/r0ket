@@ -6,11 +6,12 @@
 #include "funk/nrf24l01p.h"
 #include "basic/random.h"
 
-#define GAME_SPEED (1000 / 20)
+#define FPS 20
+#define GAME_SPEED (1000 / FPS)
 #define NICK_LEN 32
-#define NICK_BUFFER_SIZE 4
+#define NICK_BUFFER_SIZE 5
 
-#define MAX_AGE 20
+#define MAX_AGE (FPS / 1)
 // TODO saved uuid per flash
 // TODO display uuid
 
@@ -58,7 +59,7 @@ void draw_radar()
 {
     for (int i = 0; i < NICK_BUFFER_SIZE; i++)
     {
-        //if (radar_buffer[i].age < MAX_AGE)
+        if (radar_buffer[i].age < MAX_AGE)
             lcdPrintln(radar_buffer[i].nick);
     }
 }
