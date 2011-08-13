@@ -5,6 +5,7 @@
 #include "lcd/print.h"
 #include "funk/nrf24l01p.h"
 #include "remote.h"
+#include "core/adc/adc.h"
 
 char send_remote(struct remote_t *rcdata)
 {
@@ -14,9 +15,15 @@ char send_remote(struct remote_t *rcdata)
 	return nrf_snd_pkt_crc(32, buf);
 }
 
-void main_remote(void) {
+void main_acc_remote(void) {
     char key;
     char oldkey = BTN_NONE;
+    uint32_t x=0,y=0;
+    uint32_t ox=0,oy=0;
+    uint32_t oox=0,ooy=0;
+    int foox=0,fooy=0;
+	adcInit();
+
     struct remote_t rcdata = {
 	    .valid = RC_ALL,
 	    .x = 0,
@@ -33,26 +40,82 @@ void main_remote(void) {
      .maclen ="\x20",
     };
     nrf_config_set(&config);
+    uint32_t xmax=0,xmin=-1,ymax=0,ymin=-1,xmean=0,ymean=0;
+
+    for (int i=0; i<1000; i++){
+	x=adcRead(3);
+	y=adcRead(2);
+    }
+    key = getInputRaw();
+    while(!(key & BTN_ENTER)){
+        key = getInputRaw();
+    }
+    while(key & BTN_ENTER){
+        key = getInputRaw();
+    	x=adcRead(3);
+	y=adcRead(2);
+	if (x>xmax){
+		xmax=x;
+	}
+	if(y>ymax){
+		ymax=y;
+	}
+	if(y<ymin){
+		ymin=y;
+	}
+	if(x<xmin){
+		xmin=x;
+	}
+	xmean=(xmean+x)/2;
+	ymean=(ymean+y)/2;
+    }
+   // xmax=510;
+   // xmin=500;
+   // ymax=610;
+   // ymin=600;
+
+
+    
     while (1) {
-        lcdClear();
+	lcdClear();
         delayms(20);
         key = getInputRaw();
-        if(key & BTN_LEFT){
-            lcdPrintln("LEFT");
-		rcdata.x--;
-        }
-        if(key & BTN_UP){
-            lcdPrintln("UP");
-		rcdata.y++;
-        }
-        if(key & BTN_DOWN){
-            lcdPrintln("DOWN");
-		rcdata.y--;
-        }
-        if(key & BTN_RIGHT){
-            lcdPrintln("RIGHT");
-		rcdata.x++;
-        }
+        oox=ox;
+        ooy=oy;
+        ox=x;
+        oy=y;
+        x=adcRead(3);
+        y=adcRead(2);
+        x=(ox+x)/2;
+        y=(oy+y)/2;
+        x=(((ox-oox)+ox)+x)/2;
+        y=(((oy-ooy)+oy)+y)/2;
+
+        lcdClear();
+	foox=0;
+	fooy=0;
+	if (x>xmean-10&& x<xmean+10){
+            lcdPrintln("X");
+		rcdata.x=0;		
+		foox=1;
+	}
+	if(y>ymean-10 && y<ymean+10){
+            lcdPrintln("Y");
+		rcdata.y=0;
+		fooy=1;
+	}
+	if(y>600|| y<400){
+		rcdata.y=0;
+		fooy=1;
+	}	
+	if (0==fooy){
+		rcdata.y= (y-ymean)*(300/70);
+	}
+	if (0==foox) {
+		rcdata.x= (x-xmean)*(300/70);
+	}
+        delayms(20);
+        key = getInputRaw();
         if(key & BTN_ENTER){
             lcdPrintln("ENTER");
 		rcdata.z = 1;
@@ -62,22 +125,6 @@ void main_remote(void) {
 	if (key ==BTN_NONE){
 	    rcdata.z = 0;
 	    lcdPrintln("NONE");
-/*		if(speed<150){
-			speed++;
-		}
-		if(speed>150){
-			speed--;
-		}
-		if(dir<150){
-			dir++;
-		}
-		if(dir>150){
-			dir--;
-		}
-*/	}
-
-        if((oldkey != key) && (oldkey != BTN_NONE) && (oldkey != BTN_ENTER)) {
-               gpioSetValue(RB_LED1, !gpioGetValue(RB_LED1));
 	}
 	lcdPrint("X ");
 	lcdPrintInt(rcdata.x);
