@@ -5,6 +5,8 @@
 #include "lcd/render.h"
 #include "funk/nrf24l01p.h"
 #include "basic/random.h"
+#include "applications/uuid.h"
+
 
 #define FPS 20
 #define GAME_SPEED (1000 / FPS)
@@ -12,8 +14,6 @@
 #define NICK_BUFFER_SIZE 5
 
 #define MAX_AGE (FPS / 1)
-// TODO saved uuid per flash
-// TODO display uuid
 
 typedef void(*StateFunc)(void);
 StateFunc current_state = NULL;
@@ -59,8 +59,12 @@ void draw_radar()
 {
     for (int i = 0; i < NICK_BUFFER_SIZE; i++)
     {
-        if (radar_buffer[i].age < MAX_AGE)
-            lcdPrintln(radar_buffer[i].nick);
+        char buff[NICK_LEN + 16];
+        if (radar_buffer[i].age < MAX_AGE && strcmp("", radar_buffer[i].nick) != 0)
+            sprintf(buff, "* %s", radar_buffer[i].nick);
+        else
+            sprintf(buff, "  %s", radar_buffer[i].nick);
+        lcdPrintln(buff);
     }
 }
 
@@ -111,14 +115,15 @@ void find_rockets()
 void run_game()
 {
     lcdPrintln(nick);
-    lcdPrintln("BADGE RADAR");
+    char buff[NICK_LEN + 16];
+    sprintf(buff, "id: %s", uuid); 
+    lcdPrintln(buff);
+    lcdPrintln("((- RADAR -))");
     increment_age();
     find_rockets();
     draw_radar();
     for(int i=0; i < 4; i++)
-    {
         nrf_snd_pkt_crc(NICK_LEN, nick);
-    }
 }
 
 void title_screen()
@@ -135,6 +140,7 @@ void title_screen()
 
 void main_rocket_tag() 
 {
+    backlightSetBrightness(99);
     init_radar_buffer();
     load_nick();
     nrf_init();
