@@ -1,0 +1,7 @@
+#!/bin/bash
+
+rm ../release/ -rfv
+cp SECRETS SECRETS.release
+./release-all 
+cp ../release/final.bin firmware.bin
+../tools/bootloader/autoflash
