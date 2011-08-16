@@ -112,6 +112,8 @@ uint8ptouint32
 #o_close
 #o_set_gray
 #o_fill
+#o_stroke
+#o_set_line_width
 #o_set_shader
 #o_identity
 #o_transform
