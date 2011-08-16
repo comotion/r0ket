@@ -109,7 +109,7 @@ void main_acc_remote(void) {
 		fooy=1;
 	}	
 	if (0==fooy){
-		rcdata.y= (y-ymean)*(300/70);
+		rcdata.y= (y-ymean)*(100/70);
 	}
 	if (0==foox) {
 		rcdata.x= (x-xmean)*(300/70);
