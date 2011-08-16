@@ -189,9 +189,6 @@ static uint8_t mainloop() {
 	uint32_t startTime=_timectr;
 	uint8_t button;
 		IOCON_PIO1_11 = 0;
-		IOCON_PIO2_10 = 0;
-		GPIO_GPIO2DIR |= (1<<10);
-		GPIO_GPIO2DATA |=(1<<10);
 		while (1) {
 			//GPIO_GPIO0DATA&=~(1<<11);
 			IOCON_PIO1_11 = ioconbak;
@@ -245,7 +242,6 @@ static uint8_t mainloop() {
 			}
 		}
 		IOCON_PIO1_11 = ioconbak;
-		GPIO_GPIO2DIR &= ~(1<<10);
 		return button;
 
 }
