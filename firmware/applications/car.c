@@ -29,6 +29,7 @@ enum motor_mode {
 };
 
 uint16_t max=2000;
+
 uint32_t dutyx, dutyy, val=0;
 struct remote_t rcdata;
 
@@ -67,7 +68,9 @@ inline void setMotor(enum motor_mode mode)
 	}
 }
 
-void TIMER32_0_IRQHandler(void){
+
+void TIMER32_0_callb(void){
+
 	TMR_TMR32B0IR = TMR_TMR32B0IR_MR0;
 
 	if (val==max+1){
@@ -98,6 +101,7 @@ void TIMER32_0_IRQHandler(void){
 };
 
 void main_car(void) {
+
 	RB_HB0_IO = 0x81;
 	RB_HB1_IO = 0x01;
 	RB_HB5_IO = 0x81;
@@ -112,6 +116,9 @@ void main_car(void) {
 	gpioSetDir(GP_MOT2, gpioDirection_Output);
 	gpioSetDir(GP_MOT3, gpioDirection_Output);
 	gpioSetDir(GP_MOT4, gpioDirection_Output);
+
+	timer32Callback0= TIMER32_0_callb;
+
 	timer32Init(0, (72E6/100E3));
 	timer32Enable(0);
 
