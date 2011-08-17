@@ -90,10 +90,10 @@
 
 // Hackerbus
 #define RB_HB0			1,3
-#define RB_HB0_IO		IOCON_PIO1_3
+#define RB_HB0_IO		IOCON_SWDIO_PIO1_3
 
 #define RB_HB1			0,10
-#define RB_HB1_IO		IOCON_PIO0_10
+#define RB_HB1_IO		IOCON_SWCLK_PIO0_10
 
 #define RB_HB2			1,1
 #define RB_HB2_IO		IOCON_PIO1_1
@@ -105,7 +105,7 @@
 #define RB_HB4_IO		IOCON_PIO1_4
 
 #define RB_HB5			1,2
-#define RB_HB5_IO		IOCON_PIO1_2
+#define RB_HB5_IO		IOCON_JTAG_nTRST_PIO1_2
 
 // Funk
 #define RB_NRF_CE		1,5
