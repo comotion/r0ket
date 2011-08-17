@@ -40,8 +40,7 @@ OBJS += lpc1xxx/$(TARGET)_handlers.o lpc1xxx/LPC1xxx_startup.o
 ##########################################################################
 # Startup files
 ##########################################################################
-LDLIBS  = -lm
-LDLIBS += -Lapplications -lapp
+LDLIBS = -Lapplications -lapp
 LDLIBS += -Lfunk -lfunk
 LDLIBS += -Lusbcdc -lusbcdc
 LDLIBS += -Lfilesystem -lfat
@@ -51,6 +50,7 @@ LDLIBS += -Lcore -lcore
 LDLIBS += -Lusb -lusb
 LDLIBS += -lbasic
 LDLIBS += -lfunk
+LDLIBS += -lm
 OCFLAGS = --strip-unneeded
 
 SUBDIRS?= $(foreach lib,$(LIBS),$(dir $(lib)))
