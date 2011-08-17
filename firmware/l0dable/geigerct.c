@@ -122,11 +122,11 @@ void ExtInt3_Handler() {
  *  Ra226: 29cps => 1mR/h = 10µSv/h
  *  Co60:  22cps => 1mR/h = 10µSv/h
  *
- *  //2.2 * 60 cpm = 1 µSv/h, play safe
+ *  //2.9 * 60 cpm = 1 µSv/h
  */
 static uint32_t nanoSievertPerH(uint32_t cpm) {
 
-	return ((1000*cpm ) /(22*6) );
+	return ((1000*cpm ) /(29*6) );
 
 }
 
