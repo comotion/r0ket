@@ -62,7 +62,6 @@ void (*orig_handler_extint3)(void);  // original EINT3 handler
 
 uint32_t volatile IntCtr;
 
-
 void ExtInt3_Handler();
 
 // Remember: ram() must be the first function, place all other code AFTER
@@ -245,5 +244,4 @@ static uint8_t mainloop() {
 		return button;
 
 }
-
 
