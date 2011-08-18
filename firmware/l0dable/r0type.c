@@ -140,7 +140,7 @@ void ram(void){
       conrtols();
       draw_game();
       lcdDisplay();
-      delayms_queue_plus(12,0);
+      delayms(6);
       if(game.shot_delay > 0){
         game.shot_delay--;
       }
@@ -151,6 +151,7 @@ void ram(void){
 
 static bool screen_intro(void) {
 	char key=0;
+	bool step = false;
 	while(key==0) {
 		getInputWaitRelease();
 		lcdFill(0);
@@ -176,6 +177,7 @@ static bool screen_intro(void) {
 
 static void draw_splash(void){
   char key=0;
+	bool step = false;
 	while(key==0) {
     lcdFill(0);
     if (highscore_set(game.score, GLOBAL(nickname))){
@@ -188,7 +190,7 @@ static void draw_splash(void){
     lcdDisplay();
 		key=getInputWaitTimeout(1000);
   }
-  return;
+  return !(key==BTN_LEFT);
 }
 
 static bool highscore_set(uint32_t score, char nick[]) {
@@ -215,6 +217,8 @@ static uint32_t highscore_get(char nick[]){
 
 static void init_game(void) {
 
+  randomInit();
+ 
   game.ticks = 0;
   game.ships = 3;
   game.score = 0;
@@ -372,6 +376,8 @@ static void draw_score(void){
 static void detect_collitions(void){
   for(int i = 0;i<MAX_ASTEROIDS;i++){
     if(game.asteroids_t[i] > 0){
+      int as_x = game.asteroids_x[i];
+      int as_y = game.asteroids_y[i];
       int as_h = 0;
       int as_w = 0;
       if(game.asteroids_t[i] == 1){
