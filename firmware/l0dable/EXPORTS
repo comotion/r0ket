@@ -21,6 +21,7 @@ lcdPrintInt
 lcdPrintIntHex
 lcdPrintln
 lcdRefresh
+lcdSetCrsrX
 lcdSetPixel
 lcdShift
 lcdShowAnim
@@ -30,6 +31,7 @@ getInputRaw
 getInputWait
 getInputWaitRelease
 getInputWaitTimeout
+getInputWaitRepeat
 #crypto
 xxtea_decode_words
 xxtea_encode_words
@@ -64,6 +66,7 @@ work_queue
 readFile
 selectFile
 writeFile
+applyConfig
 saveConfig
 the_config
 #gpio
@@ -104,19 +107,19 @@ systickGetTicks
 uint32touint8p
 uint8ptouint32
 #Add stuff here
-#o_init
-#o_path_new
-#o_move_to
-#o_line_to
-#o_curve_to
-#o_close
-#o_set_gray
-#o_fill
-#o_stroke
-#o_set_line_width
-#o_set_shader
-#o_identity
-#o_transform
+o_init
+o_path_new
+o_move_to
+o_line_to
+o_curve_to
+o_close
+o_set_gray
+o_fill
+o_stroke
+o_set_line_width
+o_set_shader
+o_identity
+o_transform
 #I2C
 I2CMasterBuffer
 I2CSlaveBuffer
