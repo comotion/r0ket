@@ -92,6 +92,7 @@ void ram(void) {
 
 	long frame_count = 0;
 	init_game();
+	randomInit();
 
 	while(1) {
 		frame_count++;

@@ -43,6 +43,9 @@ static void random_area(struct bitset *area, uchar x0, uchar y0, uchar x1, uchar
 static void reset_area();
 
 void ram(void) {
+    int msgdx=0;
+    int msgdy=0;
+
     getInputWaitRelease();
     reset_area();
     random_area(life,1,1,RESX,RESY,40);
@@ -59,7 +62,7 @@ void ram(void) {
 
     lcdClear();
     setExtFont(GLOBAL(nickfont));
-    
+
     nickwidth=DoString(nickx,nicky,GLOBAL(nickname));
     if(nickwidth<50)nickoff=30;
     nickheight=getFontHeight();
@@ -73,20 +76,23 @@ void ram(void) {
         // Old shift code. Can't handle longer Nicks...
         // if(iter%LCDSHIFT_EVERY_N==0) lcdShift(1,-2,1);
         // if(iter%LCDSHIFT_EVERY_N==0) { nickx=(nickx+1)%100-nickwidth; nicky=(nicky+1)%50;}
-        if(iter%LCDSHIFTX_EVERY_N==0) { nickx--; 
+        if(iter%LCDSHIFTX_EVERY_N==0) { nickx--;
         if(nickx<(-1*nickwidth-nickoff))nickx=0; }
         if(iter%LCDSHIFTY_EVERY_N==0) { nicky+=movy;
         if(nicky<1 || nicky>RESY-nickheight) movy*=-1; }
         DoString(nickx,nicky,GLOBAL(nickname));
         DoString(nickx+nickwidth+nickoff,nicky,GLOBAL(nickname));
         if(nickwidth<RESX) DoString(nickx+2*(nickwidth+nickoff),nicky,GLOBAL(nickname));
-	char key=stepmode?getInputWait():getInputRaw();
-	stepmode=0;
-	switch(key) {
-	case BTN_ENTER:
-	  return;
-	case BTN_RIGHT:
-	  getInputWaitRelease();
+        if (GLOBAL(newmsgcount)) {
+            DoString(msgdx,msgdy,"New Message");
+        }
+    char key=stepmode?getInputWait():getInputRaw();
+    stepmode=0;
+    switch(key) {
+    case BTN_ENTER:
+      return;
+    case BTN_RIGHT:
+      getInputWaitRelease();
           speedmode=(speedmode+1)%7;
           delay=15;
           switch(speedmode) {
@@ -105,19 +111,19 @@ void ram(void) {
             case 6:
               delay=5; ITER_EVERY_N=8; LCDSHIFTX_EVERY_N=1; LCDSHIFTY_EVERY_N=1; break;
           }
-	  break; 
-	case BTN_DOWN:
-	  stepmode=1;
-	  getInputWaitRelease();
-	  break;
-	case BTN_LEFT:
-	  pattern=(pattern+1)%PATTERNCOUNT;
-	case BTN_UP:
-	  stepmode=1;
-	  reset_area();
-	  getInputWaitRelease();
-	  break;
-	}
+      break;
+    case BTN_DOWN:
+      stepmode=1;
+      getInputWaitRelease();
+      break;
+    case BTN_LEFT:
+      pattern=(pattern+1)%PATTERNCOUNT;
+    case BTN_UP:
+      stepmode=1;
+      reset_area();
+      getInputWaitRelease();
+      break;
+    }
         delayms_queue_plus(delay,0);
 #ifdef SIMULATOR
   fprintf(stderr,"Iteration %d - x %d, y %d \n",iter,nickx,nicky);
@@ -173,7 +179,7 @@ static void fill_area(struct bitset *area, uchar x0, uchar y0, uchar x1, uchar y
       bitset_set2(area,x,y,value);
     }
   }
-} 
+}
 
 static void draw_area() {
   for(uchar x=0; x<RESX; ++x) {
@@ -207,7 +213,7 @@ static void calc_area() {
   for(uchar x=1; x<=RESX; ++x) {
     for(uchar y=1; y<=RESY; ++y) {
       uchar sum=bitset_get2(life,x+1,y-1)+bitset_get2(life,x+1,y)+bitset_get2(life,x+1,y+1)+
-	left[y-1]+left[y]+left[y+1]+middle[y-1]+middle[y+1];
+    left[y-1]+left[y]+left[y+1]+middle[y-1]+middle[y+1];
       bitset_set2(life,x,y,sum==3||(sum==2&&bitset_get2(life,x,y)));
     }
     // temp-less swap of buffer pointers
@@ -220,7 +226,7 @@ static void calc_area() {
 
 static void reset_area() {
   fill_area(life,0,0,RESX+1,RESY+1,0);
-  
+
   switch(pattern) {
   case 0: // R pentomino
     bitset_set2(life,41,40,1);

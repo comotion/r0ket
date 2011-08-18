@@ -7,6 +7,8 @@
 #include "lcd/print.h"
 #include "filesystem/ff.h"
 
+#include "funk/mesh.h"
+
 #include "usetable.h"
 
 #define IMAGEFILE "nyan.lcd"
@@ -45,6 +47,13 @@ void ram(void) {
         setExtFont(GLOBAL(nickfont));
         DoString(5, dy, GLOBAL(nickname));
 
+        if (GLOBAL(newmsgcount) > 0) {
+            setExtFont("Font_8x8");
+            //lcdSetCrsr(0,0);
+            lcdPrint("new msgs: ");
+            lcdPrintln(IntToStr(GLOBAL(newmsgcount),2,0));
+        }
+
         lcdDisplay();
 
         if(framems < 100) {
@@ -52,6 +61,35 @@ void ram(void) {
         } else {
             getInputWaitTimeout(framems);
         }
+    }
+
+    if (getInputRaw()==BTN_UP && GLOBAL(newmsgcount) > 0) {
+        char *msg;
+        for(int z=0;z<MESHBUFSIZE;z++) {
+            if (MO_TYPE(meshbuffer[z].pkt) == GLOBAL(newmsg)) {
+                msg = (char *)MO_BODY(meshbuffer[z].pkt);
+                break;
+            }
+        };
+		setExtFont("Font_8x8");
+        lcdPrint(GLOBAL(newmsg));
+        lcdPrintln(": ");
+        while(strlen(msg)>13){
+            int q;
+            for(q=0;q<13;q++){
+                if(msg[q]==' ')
+                    break;
+            };
+            msg[q]=0;
+            lcdPrintln(msg);
+            msg[q]=' ';
+            msg+=q+1;
+        };
+        lcdPrintln(msg);
+        lcdRefresh();
+
+        getInputWaitRelease();
+        GLOBAL(newmsgcount) = 0;
     }
 
     if(state)

@@ -36,6 +36,8 @@ struct CDESC the_config[]= {
 char nickname[MAXNICK]="anonymous";
 char nickfont[FILENAMELEN];
 char nickl0[FILENAMELEN];
+char newmsg;
+int newmsgcount = 0;
 
 #define CONFFILE "r0ket.cfg"
 #define CONF_ITER for(int i=0;the_config[i].name!=NULL;i++)

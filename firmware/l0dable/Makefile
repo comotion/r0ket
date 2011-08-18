@@ -22,7 +22,7 @@ include $(ROOT_PATH)/Makefile.inc
 ##########################################################################
 LDSRCFILE=ram.ld
 LDFILE=loadable.ld
-CFLAGS+=-mlong-calls -fno-toplevel-reorder
+CFLAGS+=-mlong-calls -fno-toplevel-reorder -lc
 
 DOCRYPT=0
 CRYPT=../../tools/crypto/xxtea

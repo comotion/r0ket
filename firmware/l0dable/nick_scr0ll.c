@@ -18,6 +18,9 @@ typedef uint8_t uchar;
 static unsigned long iter=0;
 
 void ram(void) {
+    int msgdx=0;
+    int msgdy=0;
+
     getInputWaitRelease();
 
     static int nickx=2,nicky=10;
@@ -35,7 +38,7 @@ void ram(void) {
 
     lcdClear();
     setExtFont(GLOBAL(nickfont));
-    nicky=1; 
+    nicky=1;
     nickwidth=DoString(nickx,nicky,nick);
     if(nickwidth<50)nickoff=30;
     nickheight=getFontHeight();
@@ -58,7 +61,7 @@ void ram(void) {
         // Old shift code. Can't handle longer Nicks...
         // if(iter%LCDSHIFT_EVERY_N==0) lcdShift(1,-2,1);
         // if(iter%LCDSHIFT_EVERY_N==0) { nickx=(nickx+1)%100-nickwidth; nicky=(nicky+1)%50;}
-        if(iter%LCDSHIFTX_EVERY_N==0) { nickx-=movx; 
+        if(iter%LCDSHIFTX_EVERY_N==0) { nickx-=movx;
         if(nickx<=(-1*nickwidth-nickoff))nickx=0; }
 #ifdef SIMULATOR
   fprintf(stderr,"nickx %d \n",nickx);
@@ -66,17 +69,22 @@ void ram(void) {
         DoString(nickx,nicky,nick);
         DoString(nickx+nickwidth+nickoff,nicky,nick);
         if(nickwidth<RESX) DoString(nickx+2*(nickwidth+nickoff),nicky,nick);
-	char key=stepmode?getInputWait():getInputRaw();
-	stepmode=0;
-	switch(key) {
+
+        if (GLOBAL(newmsgcount)) {
+            DoString(msgdx,msgdy,"New Message");
+        }
+
+    char key=stepmode?getInputWait():getInputRaw();
+    stepmode=0;
+    switch(key) {
         // Buttons: Right change speed, Up hold scrolling
-	case BTN_ENTER:
-	  return;
-	case BTN_RIGHT:
-	  getInputWaitRelease();
+    case BTN_ENTER:
+      return;
+    case BTN_RIGHT:
+      getInputWaitRelease();
           speedmode=(speedmode+1)%6;
           delay=15;
-          // speeds: normal, slow, sloooow, double, tripple... 
+          // speeds: normal, slow, sloooow, double, tripple...
           switch(speedmode) {
             case 0:
               movx=1; LCDSHIFTX_EVERY_N=1; LCDSHIFTY_EVERY_N=1; break;
@@ -89,16 +97,16 @@ void ram(void) {
             case 5:
               movx=3; LCDSHIFTX_EVERY_N=1; LCDSHIFTY_EVERY_N=1; break;
           }
-	  break; 
-	case BTN_UP:
-	  stepmode=1;
-	  getInputWaitRelease();
-	  break;
-	case BTN_LEFT:
+      break;
+    case BTN_UP:
+      stepmode=1;
+      getInputWaitRelease();
+      break;
+    case BTN_LEFT:
           return;
-	case BTN_DOWN:
-	  return;
-	}
+    case BTN_DOWN:
+      return;
+    }
         delayms_queue_plus(delay,0);
     }
     return;

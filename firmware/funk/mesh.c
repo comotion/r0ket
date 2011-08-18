@@ -266,6 +266,9 @@ uint8_t mesh_recvqloop_work(void){
         memcpy(mpkt->pkt,buf,MESHPKTSIZE);
         mpkt->flags=MF_USED;
 
+        GLOBAL(newmsgcount)++;
+		GLOBAL(newmsg) = MO_TYPE(buf);
+
         return 1;
 };
 

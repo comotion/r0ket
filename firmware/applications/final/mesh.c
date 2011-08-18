@@ -38,10 +38,15 @@ int choose(char * texts, int8_t menuselection){
 
     visible_lines = (RESY/getFontHeight())-1; // subtract title line
 
+
     while (1) {
         // Display current menu page
         lcdClear();
-        lcdPrintln(texts);
+        if (menuselection < 7) {
+            lcdPrintln(texts);
+	} else {
+		current_offset= ((numentries-1)/visible_lines) * visible_lines;
+	}
         p=texts;
         while(*p++);
         for(int i=0;i<current_offset;i++)
@@ -140,8 +145,10 @@ void m_choose(){
     char list[99];
     int i=0;
 
+    GLOBAL(newmsgcount) = 0;
+
     meshmsg=0;
-    gpioSetValue (RB_LED1, 0); 
+    gpioSetValue (RB_LED1, 0);
 
     while(1){
     char *p=list;
@@ -175,6 +182,8 @@ void m_choose(){
                 break;
             case('s'):
                 strcpy(p,"Snake");
+            case('x'):
+                strcpy(p,"darksystem");
                 break;
             default:
                 p[0]=*mm;
@@ -220,6 +229,8 @@ void m_choose(){
             break;
         case('s'):
             strcpy(p,"Snake");
+        case('D'):
+            lcdPrintln("darksystem");
             break;
     };
     if(tmm[i]>='a' && tmm[i]<='z'){
@@ -279,7 +290,7 @@ void tick_mesh(void){
         mesh_systick();
     if(_timectr%64)
         if(meshmsg){
-            gpioSetValue (RB_LED1, 1); 
+            gpioSetValue (RB_LED1, 1);
             meshmsg=0;
         };
 };
