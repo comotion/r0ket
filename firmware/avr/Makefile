@@ -5,7 +5,7 @@
 OBJS =
 
 OBJS += avrspi.o
-#OBJS += avrspi.o
+OBJS += avrisp.o
 
 LIBNAME=avr
 
