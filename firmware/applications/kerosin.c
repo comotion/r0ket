@@ -15,7 +15,7 @@ volatile unsigned int lastTick;
 void main_kerosin(void) {
 
 	uint8_t enterCnt = 0;
-	uint8_t btnPressed = 0;
+	uint8_t buffer[512];
 	
 //	cpuInit();                                // Configure the CPU
 	systickInit(CFG_SYSTICK_DELAY_IN_MS);     // Start systick timer
@@ -51,13 +51,19 @@ void main_kerosin(void) {
 	lcdDisplay();
 
     while (1) {
-		if(getInput()==BTN_ENTER)
+/*		uint32_t size = USB_ReadEP(CDC_DEP_IN, buffer);
+		DoInt(5, 35, (int) (size));
+		DoString(5, 40, buffer);
+		*/
+		getInputWaitRelease();
+		if(getInputRaw()==BTN_ENTER)
 		{
 			enterCnt++;
 				printf("ENTER\t%d\r\n", enterCnt);
 			DoInt(50, 25, (int) (enterCnt));
-			lcdDisplay();
 		}
+		
+		lcdDisplay();
 		
 	}
 }
