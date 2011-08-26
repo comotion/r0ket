@@ -77,7 +77,7 @@
 
 
     #define CFG_USBCDC                  (1)
-	#define CFG_PRINTF_USBCDC			(0)
+	#define CFG_PRINTF_USBCDC			(1)
     #define CFG_USBCDC_BAUDRATE         (115200)
     #define CFG_USBCDC_INITTIMEOUT      (5000)
     #define CFG_USBCDC_BUFFERSIZE       (256)

@@ -14,6 +14,9 @@ volatile unsigned int lastTick;
 
 void main_kerosin(void) {
 
+	uint8_t enterCnt = 0;
+	uint8_t btnPressed = 0;
+	
 //	cpuInit();                                // Configure the CPU
 	systickInit(CFG_SYSTICK_DELAY_IN_MS);     // Start systick timer
 	gpioInit();                               // Enable GPIO
@@ -22,12 +25,10 @@ void main_kerosin(void) {
 	lcdInit();
 		
     DoString(10,5,"USB plug");
-	DoInt(10,22, CFG_USBCDC);
-    lcdDisplay();
 
 	// Initialise USB CDC
 #ifdef CFG_USBCDC
-    DoString(10,15,"USBCDC");
+    DoString(10, 15, "USBCDC");
     lastTick = systickGetTicks();   // Used to control output/printf timing
     CDC_Init();                     // Initialise VCOM
     USB_Init();                     // USB Initialization
@@ -45,8 +46,20 @@ void main_kerosin(void) {
 	
 	printf("Hello World");
 
+	
+	DoString(10, 25, "Enter:");
+	lcdDisplay();
 
-    while (1) {}
+    while (1) {
+		if(getInput()==BTN_ENTER)
+		{
+			enterCnt++;
+				printf("ENTER\t%d\r\n", enterCnt);
+			DoInt(50, 25, (int) (enterCnt));
+			lcdDisplay();
+		}
+		
+	}
 }
 
 
