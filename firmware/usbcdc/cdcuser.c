@@ -337,8 +337,8 @@ extern int CDC_GetInputBuffer(char *buffer, int bufferLength)
 		for (i=0; i < BulkBufOutNumBytesRead && i < bufferLength; i++) {
 			buffer[i] = BulkBufOut[i];
 		}
-		BulkBufOutNumBytesRead = 0;
-		BulkBufOutIndex = 0;
+		BulkBufOutNumBytesRead -= i;
+		BulkBufOutIndex -= i;
 		return i;
 	} else {
 		return -1;

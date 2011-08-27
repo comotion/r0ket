@@ -15,7 +15,7 @@ volatile unsigned int lastTick;
 void main_kerosin(void) {
 
 	uint8_t enterCnt = 0;
-	uint8_t buffer[10];
+	uint8_t buffer[64];
 	
 //	cpuInit();                                // Configure the CPU
 	systickInit(CFG_SYSTICK_DELAY_IN_MS);     // Start systick timer
@@ -69,7 +69,8 @@ void main_kerosin(void) {
 				readData = CDC_GetInputBuffer(buffer, sizeof(buffer));
 				
 				DoString(5, 40, buffer);
-				DoInt(50, 45, readData);
+				DoString(1, 50, "Received: ");
+				DoInt(57, 50, readData);
 				lcdDisplay();
 				break;
 			default:
