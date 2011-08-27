@@ -28,6 +28,7 @@
 
 // unsigned char BulkBufIn  [64];            // Buffer to store USB IN  packet
 unsigned char BulkBufOut [64];            // Buffer to store USB OUT packet
+int numBytesRead;
 unsigned char NotificationBuf [10];
 
 CDC_LINE_CODING CDC_LineCoding  = {CFG_USBCDC_BAUDRATE, 0, 0, 8};
@@ -306,15 +307,30 @@ void CDC_BulkIn(void)
  *---------------------------------------------------------------------------*/
 void CDC_BulkOut(void) 
 {
-  int numBytesRead;
-
   // get data from USB into intermediate buffer
   numBytesRead = USB_ReadEP(CDC_DEP_OUT, &BulkBufOut[0]);
 
   // ... add code to check for overwrite
 
+#if 0 /* do not set the data over serial */	
   // store data in a buffer to transmit it over serial interface
-  CDC_WrOutBuf ((char *)&BulkBufOut[0], &numBytesRead);
+  CDC_WrOutBuf ((char *)&BulkBufOut[0], &numBytesRead); 
+#endif
+	
+}
+
+extern int CDC_GetInputBuffer(char *buffer, int bufferLength)
+{
+	int i;
+	if (numBytesRead > 0) {
+		for (i=0; i < numBytesRead && i < bufferLength; i++) {
+			buffer[i] = BulkBufOut[i];
+		}
+		return numBytesRead;
+	} else {
+		return -1;
+	}
+
 }
 
 

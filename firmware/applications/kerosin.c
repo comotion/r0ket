@@ -15,7 +15,7 @@ volatile unsigned int lastTick;
 void main_kerosin(void) {
 
 	uint8_t enterCnt = 0;
-	uint8_t buffer[512];
+	uint8_t buffer[10];
 	
 //	cpuInit();                                // Configure the CPU
 	systickInit(CFG_SYSTICK_DELAY_IN_MS);     // Start systick timer
@@ -44,27 +44,37 @@ void main_kerosin(void) {
 #endif
 	  // Printf can now be used with UART or USBCDC
 	
-	printf("Hello World");
+	puts("Hello World");
 
 	
 	DoString(10, 25, "Enter:");
 	lcdDisplay();
 
+	
+	int readData;
     while (1) {
-/*		uint32_t size = USB_ReadEP(CDC_DEP_IN, buffer);
-		DoInt(5, 35, (int) (size));
-		DoString(5, 40, buffer);
-		*/
-		getInputWaitRelease();
-		if(getInputRaw()==BTN_ENTER)
-		{
-			enterCnt++;
-				printf("ENTER\t%d\r\n", enterCnt);
-			DoInt(50, 25, (int) (enterCnt));
-		}
-		
-		lcdDisplay();
-		
+				
+		switch (getInput()) {
+			case BTN_ENTER:
+				enterCnt++;
+				puts("ENTER\t");
+				buffer[0] = '0' + enterCnt;
+				buffer[1] = 0;
+				puts(buffer);
+				puts("\r\n");
+				DoInt(50, 25, (int) (enterCnt));
+				lcdDisplay();				
+				break;
+			case BTN_LEFT:
+				readData = CDC_GetInputBuffer(buffer, sizeof(buffer));
+				
+				DoString(5, 40, buffer);
+				DoInt(50, 45, readData);
+				lcdDisplay();
+				break;
+			default:
+				break;
+		}		
 	}
 }
 
