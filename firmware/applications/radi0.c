@@ -2,6 +2,7 @@
 #include <sysinit.h>
 #include "basic/basic.h"
 #include "lcd/render.h"
+#include "lcd/print.h"
 #include "funk/nrf24l01p.h"
 #include "core/ssp/ssp.h"
 
@@ -12,7 +13,11 @@
 
 // modified functions to get pakets
 // original from source of r0ket firmware
-void startPkt(void){
+inline void xmit_spi(uint8_t dat) {
+    sspSend(0, (uint8_t*) &dat, 1);
+}
+
+static void startPkt(void){
 
     nrf_write_reg(R_CONFIG,
             R_CONFIG_PRIM_RX| // Receive mode
@@ -25,13 +30,20 @@ void startPkt(void){
     CE_HIGH();
 };
 
-void endPkt(void){
+static void nrf_read_pkt(int len, uint8_t* data){
+    CS_LOW();
+    xmit_spi(C_R_RX_PAYLOAD);
+    sspReceive(0,data,len);
+    CS_HIGH();
+};
+
+static void endPkt(void){
     CE_LOW();
 	nrf_cmd(C_FLUSH_RX);
     nrf_write_reg(R_STATUS,R_STATUS_RX_DR);
 };
 
-int pollPkt(uint8_t maxsize, uint8_t * pkt){
+static int pollPkt(uint8_t maxsize, uint8_t * pkt){
     uint8_t length = 0;
     uint8_t status = 0;
 
@@ -69,17 +81,17 @@ int pollPkt(uint8_t maxsize, uint8_t * pkt){
 };
 
 // scan for packets on a given frequency, bitrate and preamble
-uint16_t detect(uint8_t bitrate, uint8_t freqChannel, uint8_t noise, uint16_t dataLength) {
+static uint16_t detect(uint8_t bitrate, uint8_t freqChannel, uint8_t noise, uint16_t dataLength) {
 	#define BUFFER_SIZE 16
 
 	const int16_t START_BYTE = 3;					// number of evaluated bytes
-	uint8_t buffer[BUFFER_SIZE];					// buffer for packets
-	uint32_t data[dataLength];						// variable for data being evaluated later
 	int16_t length = 0;								// length of received packet
-	uint32_t factor = 1;
-	uint32_t mostCommon = 0;
+	uint8_t buffer[BUFFER_SIZE];					// buffer for packets
 	uint16_t mostHits = 0;
 	uint16_t recentHits = 0;
+	uint32_t data[dataLength];						// variable for data being evaluated later
+	uint32_t factor = 1;
+	uint32_t mostCommon = 0;
 	uint32_t recentNumber = 0;
 
 	nrf_write_reg(0x05, freqChannel);				// set frequency
@@ -202,9 +214,9 @@ uint16_t detect(uint8_t bitrate, uint8_t freqChannel, uint8_t noise, uint16_t da
 
 void main_radi0(void) {
 	const uint16_t DATA_LENGTH = 64;			// number of evaluated packets per call of detect
-	uint32_t maxI = 0;
 	uint16_t max = 0;
 	uint16_t freqHits;
+	uint32_t maxI = 0;
 
 	lcdClear();
 	lcdRefresh();
