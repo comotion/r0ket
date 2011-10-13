@@ -8,6 +8,7 @@
 
 #include <sysinit.h>
 #include "basic/basic.h"
+#include <string.h>
 #include "core/i2c/i2c.h"
 #include "lcd/render.h"
 #include "lcd/print.h"
@@ -15,6 +16,18 @@
 
 USB_DEV_INFO DeviceInfo;
 HID_DEVICE_INFO HidDevInfo;
+
+typedef struct hiddata_out_s {
+	int16_t sensordata[3];
+	uint32_t status;
+	uint32_t systicks;
+	uint32_t rollovers;
+	uint32_t skipped;
+} hiddata_out_t;
+
+hiddata_out_t buf[2];
+uint8_t activebuf;
+uint32_t rot;
 
 ROM ** myrom = (ROM **)0x1fff1ff8;
 #ifndef CFG_USBMSC
@@ -51,12 +64,12 @@ const uint8_t USB_StringDescriptor[] = {
 #define USB_PROD_ID   0xbabe
 #define USB_DEVICE    0x0100
 
-#define ADXL345_I2C_WRITE	0x3A
-#define ADXL345_I2C_READ	0x3B
+#define ADXL345_I2C_WRITE	0xA6
+#define ADXL345_I2C_READ	0xA7
 
 #define ADXL345_I2C_R_DEVID	0x0
 #define ADXL345_I2C_R_BW_RATE	0x2C
-#define ADXL345_I2C_R_POWER	0x2C
+#define ADXL345_I2C_R_POWER	0x2D
 #define ADXL345_I2C_R_DATA_FORMAT	0x31
 #define ADXL345_I2C_R_DATAX0	0x32
 #define ADXL345_I2C_R_DATAX1	0x33
@@ -74,7 +87,7 @@ uint32_t adxl345SetByte(uint8_t cr, uint8_t value) {
 	return i2cEngine();
 }
 
-uint32_t adxl345GetByte(uint8_t cr) {
+uint32_t adxl345GetBytes(uint8_t cr, uint8_t count) {
 	I2CMasterBuffer[0] = ADXL345_I2C_WRITE;
 	I2CMasterBuffer[1] = cr;
 	I2CWriteLength = 2;
@@ -83,20 +96,18 @@ uint32_t adxl345GetByte(uint8_t cr) {
 
 	I2CMasterBuffer[0] = ADXL345_I2C_READ;
 	I2CWriteLength = 1;
-	I2CReadLength = 1;
+	I2CReadLength = count;
 
 	return i2cEngine();
 }
 
+uint32_t adxl345GetByte(uint8_t cr) {
+	return adxl345GetBytes(cr, 1);
+}
+
 void GetInReport (uint8_t src[], uint32_t length) {
-	uint32_t val;
-
-	adxl345GetByte(ADXL345_I2C_R_DATAX0);
-	val = I2CSlaveBuffer[0] << 8;
-	adxl345GetByte(ADXL345_I2C_R_DATAX1);
-	val |= I2CSlaveBuffer[0];
-
-	*((uint32_t*)src) = val;
+	memcpy(src, (const void*) &(buf[activebuf]), sizeof(hiddata_out_t));
+	rot=0;
 	return;
 }
 
@@ -140,9 +151,9 @@ void usbHIDInit (void)
 	HidDevInfo.idProduct = USB_PROD_ID;
 	HidDevInfo.bcdDevice = USB_DEVICE;
 	HidDevInfo.StrDescPtr = (uint32_t)&USB_StringDescriptor[0];
-	HidDevInfo.InReportCount = 4;
+	HidDevInfo.InReportCount = sizeof(hiddata_out_t);
 	HidDevInfo.OutReportCount = 1;
-	HidDevInfo.SampleInterval = 0x20;
+	HidDevInfo.SampleInterval = 0x02;
 	HidDevInfo.InReport = GetInReport;
 	HidDevInfo.OutReport = SetOutReport;
 
@@ -165,29 +176,28 @@ void usbHIDInit (void)
 
 void main_adxl345(void)
 {
-	uint32_t val,r1,r2,r3;
+	uint8_t b;
+	memset(buf, 0, 2*sizeof(hiddata_out_t));
+	activebuf=0;
+	rot=0;
 
-	// usbHIDInit();
+	lcdPrintln("start"); lcdRefresh(); 
 	i2cInit(I2CMASTER); // Init I2C
-	r1=adxl345SetByte(ADXL345_I2C_R_POWER, 1<<3);
-	DoInt(20,30,r1);
-	lcdRefresh(); 
-	while(1) {
-	}
-
-	lcdPrintln("Done");
+	lcdPrintln("i2c"); lcdRefresh();
+	adxl345SetByte(ADXL345_I2C_R_DATA_FORMAT, 1<<3 | 1<<1 | 1<<0); // full res at +-16g
+	adxl345SetByte(ADXL345_I2C_R_BW_RATE, 0x0D); // 800 Hz sampling rate
+	adxl345SetByte(ADXL345_I2C_R_POWER, 1<<3); // start measuring
+	lcdPrintln("adxl345"); lcdRefresh();
+	usbHIDInit();
+	lcdPrintln("usb"); lcdRefresh(); 
 	while(1){
-		r1=adxl345GetByte(ADXL345_I2C_R_DEVID);
-		val = I2CSlaveBuffer[0] << 16;
-		r2=adxl345GetByte(ADXL345_I2C_R_DATAX0);
-		val |= I2CSlaveBuffer[0] << 8;
-		r3=adxl345GetByte(ADXL345_I2C_R_DATAX1);
-		val |= I2CSlaveBuffer[0];
-		DoInt(20,20,val);
-		DoInt(20,30,r1);
-		DoInt(20,40,r2);
-		DoInt(20,50,r3);
-
-		lcdRefresh(); 
+		b = activebuf ? 0 : 1;
+		buf[b].status = adxl345GetBytes(ADXL345_I2C_R_DATAX0, 6);
+		memcpy(buf[b].sensordata, (const void*) I2CSlaveBuffer, 6);
+		buf[b].systicks = systickGetTicks();
+		buf[b].rollovers = systickGetRollovers();
+		buf[b].skipped = rot;
+		activebuf = b;
+		rot++;
 	}
 }
