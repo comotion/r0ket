@@ -14,12 +14,12 @@
 #include "lcd/backlight.h"
 
 /* hardware dependent: */
+#define LED0 RB_SPI_SS3
+#define LED1 RB_SPI_SS4
 #define LED2 RB_SPI_SS0
 #define LED3 RB_SPI_SS1
 #define LED4 RB_SPI_SS2
 #define LED5 RB_SPI_SS5
-#define LED1 RB_SPI_SS4
-#define LED0 RB_SPI_SS3
 
 /* ADXL345 addresses */
 #define ADXL345_I2C_WRITE		0xA6
