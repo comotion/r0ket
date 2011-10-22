@@ -68,60 +68,6 @@ uint32_t adxl345GetByte(uint8_t cr) {
 	return adxl345GetBytes(cr, 1);
 }
 
-
-/* USB specific: */
-
-USB_DEV_INFO DeviceInfo;
-HID_DEVICE_INFO HidDevInfo;
-
-typedef struct hiddata_out_s {
-	int16_t sensordata[3];
-	uint32_t status;
-	uint32_t systicks;
-	uint32_t rollovers;
-	uint32_t skipped;
-} hiddata_out_t;
-
-hiddata_out_t buf[2];
-uint8_t activebuf;
-uint32_t rot;
-
-ROM ** myrom = (ROM **)0x1fff1ff8;
-#ifndef CFG_USBMSC
-USB_IRQHandler(void)
-{
-	(*myrom)->pUSBD->isr();
-}
-#endif
-
-const uint8_t USB_StringDescriptor[] = {
-  /* Index 0x00: LANGID Codes */
-  0x04,                              /* bLength */
-  USB_STRING_DESCRIPTOR_TYPE,        /* bDescriptorType */
-  WBVAL(0x0409), /* US English */    /* wLANGID */
-  /* Index 0x04: Manufacturer */
-  0x1C,                              /* bLength */
-  USB_STRING_DESCRIPTOR_TYPE,        /* bDescriptorType */
-  'h',0, 'i',0, 'l',0, 's',0, 'e',0, '@',0, 'w',0, 'e',0, 'b',0, '.',0, 'd',0, 'e',0, ' ',0,
-  /* Index 0x20: Product */
-  0x28,                              /* bLength */
-  USB_STRING_DESCRIPTOR_TYPE,        /* bDescriptorType */
-  'r',0, '0',0, 'k',0, 'e',0, 't',0, ' ',0, 'H',0, 'I',0, 'D',0, ' ',0, ' ',0, ' ',0, ' ',0, ' ',0, ' ',0, ' ',0, ' ',0, ' ',0, ' ',0,
-  /* Index 0x48: Serial Number */
-  0x1A,                              /* bLength */
-  USB_STRING_DESCRIPTOR_TYPE,        /* bDescriptorType */
-  '0',0, '0',0, '0',0, '0',0, '0',0, '0',0, '0',0, '0',0, '0',0, '0',0, '0',0, '0',0,
-  /* Index 0x62: Interface 0, Alternate Setting 0 */
-  0x0E,                              /* bLength */
-  USB_STRING_DESCRIPTOR_TYPE,        /* bDescriptorType */
-  'H',0, 'I',0, 'D',0, ' ',0, ' ',0, ' ',0,
-};
-
-#define USB_VENDOR_ID 0x1337
-#define USB_PROD_ID   0xbabe
-#define USB_DEVICE    0x0100
-
-
 /* our globals: */
 
 uint32_t interrupts = 0;
@@ -130,8 +76,6 @@ uint32_t interrupts = 0;
 void businterrupt(void) {
 	interrupts++;
 }
-
-
 
 void main_adxlupndown(void)
 {
