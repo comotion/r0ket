@@ -9,9 +9,13 @@
 
 #include <sysinit.h>
 #include "basic/basic.h"
+#include "basic/config.h"
 #include "core/i2c/i2c.h"
-#include "systick/systick.h"
+#include "core/timer32/timer32.h"
+#include "lcd/allfonts.h"
 #include "lcd/backlight.h"
+#include "lcd/render.h"
+#include "lcd/print.h"
 
 /* hardware dependent: */
 #define LED0 RB_SPI_SS3
@@ -39,6 +43,9 @@
 #define ADXL345_I2C_R_DATAY1		0x35
 #define ADXL345_I2C_R_DATAZ0		0x36
 #define ADXL345_I2C_R_DATAZ1		0x37
+
+/* ADXL345 constants */
+#define ADXL345_DEVID			0xE5 /* octal 0345 */
 
 /* I2C communication with ADXL345 */
 uint32_t adxl345SetByte(uint8_t cr, uint8_t value) {
@@ -71,24 +78,85 @@ uint32_t adxl345GetByte(uint8_t cr) {
 /* our globals: */
 
 uint32_t interrupts = 0;
+uint32_t ticks = 0;
 
 /* defined as weak in basic/basic.c, we'll override it here */
 void businterrupt(void) {
-	interrupts++;
+//	interrupts++;
 }
 
-void main_adxlupndown(void)
-{
-	uint16_t cur = 0;
-	uint16_t duration = 0;
-	uint16_t pxstep = 0;
+#define INVERT 0
+
+void timerhandler(void){
+	TMR_TMR32B0IR = TMR_TMR32B0IR_MR0;
+	ticks++;
+}
+
+#define PIXELS_PER_ROTATION 200
+void led_loop(uint8_t show[], uint16_t show_len) {
 	int32_t avg = 0;
 	int32_t oldavg = 0;
 	int32_t diffavg = 0;
 	int32_t olddiffavg = 0;
-	uint32_t oldsystick = 0;
-	uint32_t lasttrans = 0;
+	uint32_t oldticks = 0;
+	uint32_t ticksteps = 2000; // 2 msecs
+	int16_t offset = 0;
 
+	// we don't need no backlight when displaying via LEDs
+	backlightSetBrightness(0);
+
+	offset = 32 - (show_len / 2);
+	if(offset < 0) offset = 0;
+
+	timer32Callback0 = timerhandler;
+	timer32Init(0, (CFG_CPU_CCLK / 1000000) * ticksteps);
+	timer32Enable(0);
+
+	adxl345SetByte(ADXL345_I2C_R_POWER, 1<<3); // start measuring
+
+	// loop untin ENTER is pressed:
+	while(gpioGetValue(RB_BTN4) != 0) {
+		if(oldticks != ticks) {
+			oldticks = ticks;
+			if(ticks >= offset && ticks < (show_len + offset)) {
+				gpioSetValue(LED5, (show[ticks - offset] & 0x01) ? 1 - INVERT : 0 + INVERT);
+				gpioSetValue(LED4, (show[ticks - offset] & 0x02) ? 1 - INVERT : 0 + INVERT);
+				gpioSetValue(LED3, (show[ticks - offset] & 0x04) ? 1 - INVERT : 0 + INVERT);
+				gpioSetValue(LED2, (show[ticks - offset] & 0x08) ? 1 - INVERT : 0 + INVERT);
+				gpioSetValue(LED1, (show[ticks - offset] & 0x10) ? 1 - INVERT : 0 + INVERT);
+				gpioSetValue(LED0, (show[ticks - offset] & 0x20) ? 1 - INVERT : 0 + INVERT);
+			}
+
+			/* we need to read from INT_SOURCE to reset interrupts on ADXL345's side */
+			adxl345GetBytes(ADXL345_I2C_R_INT_SOURCE, 8);
+
+			oldavg = avg;
+			olddiffavg = diffavg;
+
+			avg = (avg * 63 + (*((int16_t*) &I2CSlaveBuffer[2]) * 128)) / 64;
+			diffavg = (diffavg * 31 + ((avg - oldavg) * 128)) / 32;
+			
+			if(ticks > 80 && olddiffavg < 0 && diffavg >= 0) {
+				// from negative to positive difference: we're at the bottom
+				timer32Disable(0);
+				ticksteps = (ticksteps + 3*((ticks * ticksteps) / PIXELS_PER_ROTATION)) / 4;
+				if(ticksteps < 1000) ticksteps = 1000;
+				timer32Init(0, (CFG_CPU_CCLK / 1000000) * ticksteps);
+				ticks = 0;
+				timer32Enable(0);
+			}
+		}
+	}
+
+	timer32Disable(0);
+
+	adxl345SetByte(ADXL345_I2C_R_POWER, 0); // stop
+
+	backlightSetBrightness(GLOBAL(lcdbacklight));
+}
+
+void main_adxlupndown(void)
+{
 	uint8_t show[] = {
 		0x00, 0x3f, 0x08, 0x08, 0x3f, 0x00, 0x00, 0x21, 0x3f, 0x21,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x3f, 0x20,
@@ -96,24 +164,8 @@ void main_adxlupndown(void)
 		0x00, 0x3f, 0x24, 0x26, 0x19, 0x00, 0x3f, 0x29, 0x29, 0x21,
 		0x00, 0x00, 0x00, 0x3d, 0x00};
 #define SHOW_LEN 45
-#define PIXSTEP 2
-#define INVERT 0
 
 	/* INIT */
-
-	backlightSetBrightness(0);
-	i2cInit(I2CMASTER); // Init I2C
-	adxl345SetByte(ADXL345_I2C_R_DATA_FORMAT, 1<<5 | 1<<3 | 1<<1 | 1<<0); // full res at +-16g, interrupts are active low
-	adxl345SetByte(ADXL345_I2C_R_INT_ENABLE, 1<<7); // enable data ready interrupt
-	adxl345SetByte(ADXL345_I2C_R_BW_RATE, 0x0D); // 800 Hz sampling rate
-	adxl345SetByte(ADXL345_I2C_R_POWER, 1<<3); // start measuring
-	systickInit(1); // 1000 Hz systicks
-
-	// prepare BUSINT interrupt
-	gpioSetDir(RB_BUSINT, gpioDirection_Input);
-	gpioSetPullup (&RB_BUSINT_IO, gpioPullupMode_PullUp);
-	gpioSetInterrupt(RB_BUSINT, gpioInterruptSense_Edge, gpioInterruptEdge_Single, gpioInterruptEvent_ActiveLow);
-	gpioIntEnable(RB_BUSINT);
 
 	/* switch off LEDs */
 	gpioSetValue(LED0, 0);
@@ -123,45 +175,45 @@ void main_adxlupndown(void)
 	gpioSetValue(LED4, 0);
 	gpioSetValue(LED5, 0);
 
-	while(1){
-		oldavg = avg;
-		olddiffavg = diffavg;
-		oldsystick = systickGetTicks();
+	/* I2C communications for ADXL345: */
+	i2cInit(I2CMASTER);
 
-		/* we need to read from INT_SOURCE to reset interrupts on ADXL345's side */
-		adxl345GetBytes(ADXL345_I2C_R_INT_SOURCE, 8);
-
-		avg *= 127;
-		avg += *((int16_t*) &I2CSlaveBuffer[2]) * 128;
-		avg /= 128;
-
-		diffavg *= 63;
-		diffavg += (avg - oldavg) * 128;
-		diffavg /= 64;
-		
-		if(olddiffavg < 0 && diffavg >= 0) {
-			// from negative to positive difference: we're at the bottom
-			if(oldsystick > lasttrans) {
-				duration = oldsystick - lasttrans;
-			}
-			lasttrans = oldsystick;
-			if(duration > 200) {
-				cur=SHOW_LEN;
-				pxstep=PIXSTEP;
-			}
+	/* check presence: */
+	adxl345GetByte(ADXL345_I2C_R_DEVID);
+	if(I2CSlaveBuffer[0] != ADXL345_DEVID) {
+		lcdPrintln("ERROR:");
+		lcdPrintln("==========");
+		lcdPrintln("can't find");
+		lcdPrintln("ADXL345");
+		DoInt(64,0,I2CSlaveBuffer[0]);
+		lcdRefresh();
+		while(1) {
+			// endless loop
 		}
-		if(pxstep == PIXSTEP && cur > 0) {
-			uint8_t px = show[SHOW_LEN - cur];
-			gpioSetValue(LED5, (px & 0x01) ? 1 - INVERT : 0 + INVERT);
-			gpioSetValue(LED4, (px & 0x02) ? 1 - INVERT : 0 + INVERT);
-			gpioSetValue(LED3, (px & 0x04) ? 1 - INVERT : 0 + INVERT);
-			gpioSetValue(LED2, (px & 0x08) ? 1 - INVERT : 0 + INVERT);
-			gpioSetValue(LED1, (px & 0x10) ? 1 - INVERT : 0 + INVERT);
-			gpioSetValue(LED0, (px & 0x20) ? 1 - INVERT : 0 + INVERT);
-			cur--;
+	}
+	/* configure: */
+	adxl345SetByte(ADXL345_I2C_R_DATA_FORMAT, 1<<5 | 1<<3 | 1<<1 | 1<<0); // full res at +-16g, interrupts are active low
+	adxl345SetByte(ADXL345_I2C_R_BW_RATE, 0x0D); // 800 Hz sampling rate
+
+	/*
+	// prepare BUSINT interrupt
+	gpioSetDir(RB_BUSINT, gpioDirection_Input);
+	gpioSetPullup (&RB_BUSINT_IO, gpioPullupMode_PullUp);
+	gpioSetInterrupt(RB_BUSINT, gpioInterruptSense_Edge, gpioInterruptEdge_Single, gpioInterruptEvent_ActiveLow);
+	gpioIntEnable(RB_BUSINT);
+	adxl345SetByte(ADXL345_I2C_R_INT_ENABLE, 1<<7); // enable data ready interrupt
+	*/
+
+	/* MAIN LOOP: */
+
+	while(1) {
+		lcdClear();
+		DoInt(0,0,interrupts);
+		DoInt(0,8,ticks);
+		lcdRefresh();
+		while(gpioGetValue(RB_BTN0) != 0) {
+			/* wait for left button */
 		}
-		pxstep--;
-		if(pxstep == 0) pxstep=PIXSTEP;
-		while(systickGetTicks() <= (oldsystick + 1)) {}
+		led_loop(show, SHOW_LEN);
 	}
 }
