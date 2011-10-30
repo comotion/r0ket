@@ -54,6 +54,7 @@ int inputOffs = 0;
 int k_row = 2;
 int k_col = 7;
 int k_last = 2;
+int sx;
 
 /********************************************************/
 
@@ -106,10 +107,26 @@ void ram(void) {
 			return;
 		} else if(inputStatus == INPUT_DONE) {
 			// OK was pressed
+			// write banner to file
+			FIL file;
+			int res;
+			uint8_t v, v2;
+			UINT written;
 
-
-			delayms_queue(200);
-			getLineReset();
+			res = f_open(&file, "BANNER.ROT", FA_OPEN_ALWAYS|FA_WRITE);
+			if(res) return;
+			v = 1;
+			f_write(&file, &v, 1, &written);
+			v = 0xFF;
+			f_write(&file, &v, 1, &written);
+			v = sx+1;
+			f_write(&file, &v, 1, &written);
+			for(v=0; v<=sx; v++) {
+				v2 = lcdBuffer[96*2 - v] >> 1;
+				f_write(&file, &v2 , 1, &written);
+			}
+			f_close(&file);
+			return;
 		}
 
 		if(inputStatus != INPUT_NONE) {
@@ -248,9 +265,9 @@ int getLineHandleButton(int button) {
 
 	keybPrint();
 
-	inputOffs = inputPos - 13;
-	if(inputOffs < 0) inputOffs = 0;
-	DoString(0, 52, (const char*) &(inputString[inputOffs]));
+	//inputOffs = inputPos - 13;
+	//if(inputOffs < 0) inputOffs = 0;
+	sx = DoString(0, 52, (const char*) inputString);
 	lcdDisplay();
 
 	return ret;
