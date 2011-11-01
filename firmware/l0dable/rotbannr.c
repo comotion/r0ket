@@ -48,12 +48,14 @@ BYTE inputString[INPUTSIZE];
 #define KQUIT 1
 #define KBACKSPACE 2
 #define KXMIT 3
+#define KSHIFT 4
 
 int inputPos = 0;
 int inputOffs = 0;
 int k_row = 2;
 int k_col = 7;
 int k_last = 2;
+int shiftmode = 0;
 int sx;
 
 /********************************************************/
@@ -138,7 +140,8 @@ void ram(void) {
 }
 
 char getCharAt(int y, int x) {
-	char *charTable = "\3 \2\1\0\0\0\0\0\0\0\0zxcvbnm,./?~asdfghjkl;:\"qwertzuiop\\|1234567890-=!@#$%^&*()_+";
+	char *charTableLower = "\4 \2\3\1\0\0\0\0\0\0\0zxcvbnm,./?~asdfghjkl;:\"qwertyuiop\\|1234567890-=!@#$%^&*()_+";
+	char *charTableUpper = "\4 \2\3\1\0\0\0\0\0\0\0ZXCVBNM<>{}~ASDFGHJKL;:'QWERTYUIOP\\|1234567890-=!@#$%^&*[]_+";
 	/*
 		KXMIT, ' ', KBACKSPACE, KQUIT, 0, 0, 0, 0, 0, 0, 0, 0,
 		'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', '?', '~',
@@ -146,9 +149,8 @@ char getCharAt(int y, int x) {
 		'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '\\', '|',
 		'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=',
 		'!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+'
-	};
 	*/
-	return charTable[y*12+x];
+	return shiftmode ? charTableUpper[y*12+x] : charTableLower[y*12+x];
 }
 
 void keybPrint(void) {
@@ -157,16 +159,21 @@ void keybPrint(void) {
 	int x;
 
 	if(k_row == 0) {
-		DoString(0,60,"OK");
-	      	DoString(4*7,60,"[_]");
-		DoString(8*7,60,"DEL");
-	       	DoChar(12*7,60,'Q');
-		if(k_last == 3) {
+		if(shiftmode==0) {
+			DoString(0,60,"aA");
+		} else {
+			DoString(0,60,"Aa");
+		}
+		DoString(3*7,60,"__");
+	      	DoString(6*7,60,"<=");
+		DoString(9*7,60,"OK");
+	       	DoChar(12*7,60,'C');
+		if(k_last == 4) {
 			c = 12;
 			i = 12;
 		} else {
-			c = k_last*4;
-			i = (k_last+1)*4 - 2;
+			c = k_last*3;
+			i = (k_last+1)*3 - 2;
 		}
 	} else {
 		for(c=0; c < KCOLS; c++) {
@@ -214,7 +221,7 @@ int getLineHandleButton(int button) {
 		if(k_row == 0) {
 			// special line
 			k_last--;
-			if(k_last < 0) k_last = 3;
+			if(k_last < 0) k_last = 4;
 		} else {
 			k_col--;
 			if(k_col < 0) k_col = (KCOLS-1);
@@ -224,7 +231,7 @@ int getLineHandleButton(int button) {
 		if(k_row == 0) {
 			// special line
 			k_last++;
-			if(k_last >= 4) k_last = 0;
+			if(k_last >= 5) k_last = 0;
 		} else {
 			k_col++;
 			if(k_col >= KCOLS) k_col = 0;
@@ -246,6 +253,9 @@ int getLineHandleButton(int button) {
 			inputPos--;
 			inputString[inputPos] = '\0';
 		}
+		ret = INPUT_CONT;
+	} else if(kchar == KSHIFT) {
+		shiftmode = 1 - shiftmode;
 		ret = INPUT_CONT;
 	} else if(kchar == KXMIT) {
 		ret = INPUT_DONE;
