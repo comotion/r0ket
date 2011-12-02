@@ -1,10 +1,12 @@
+#include "basic/basic.h"
+#include "core/ssp/ssp.h"
+#include "funk/nrf24l01p.h"
+#include "lcd/print.h"
+#include "lcd/render.h"
+#include "usbcdc/cdc_buf.h"
+#include "usbcdc/util.h"
 #include <stdlib.h>
 #include <sysinit.h>
-#include "basic/basic.h"
-#include "lcd/render.h"
-#include "lcd/print.h"
-#include "funk/nrf24l01p.h"
-#include "core/ssp/ssp.h"
 
 #define CS_LOW()    gpioSetValue(RB_SPI_NRF_CS, 0)
 #define CS_HIGH()   gpioSetValue(RB_SPI_NRF_CS, 1)
@@ -99,10 +101,10 @@ static uint16_t detect(uint8_t bitrate, uint8_t freqChannel, uint8_t noise, uint
 	nrf_write_reg(0x0A, noise);						// the preamble on which we receive
 	nrf_write_reg(0x10, noise);
 
-	for (uint16_t k = 0; k < dataLength; ++k) {
+	for (uint16_t k = 0; k < dataLength; k++) {
 
 		// initialize
-		for (uint8_t i = 0; i < BUFFER_SIZE; ++i) {
+		for (uint8_t i = 0; i < BUFFER_SIZE; i++) {
 			buffer[i] = 0x00;
 		}
 
@@ -119,6 +121,12 @@ static uint16_t detect(uint8_t bitrate, uint8_t freqChannel, uint8_t noise, uint
 		if (nrf_read_reg(0x07) & 0x40) {
 			nrf_write_reg(0x07, 0x4E);
 		}
+
+        //filter all zero packets
+        if (!buffer[0] && !buffer[1] && !buffer[2]) {
+            k--;
+            continue;
+        }
 
 		// write buffer to data array
 		factor = 1;
@@ -148,7 +156,8 @@ static uint16_t detect(uint8_t bitrate, uint8_t freqChannel, uint8_t noise, uint
 		}
 		lcdRefresh();
 		delayms_queue(500);*/
-	}
+	    write_bytes(buffer, 3);
+    }
 	
 	// evaluation starts here
 	lcdClear();
@@ -206,17 +215,21 @@ static uint16_t detect(uint8_t bitrate, uint8_t freqChannel, uint8_t noise, uint
 	DoInt(0, 30, (mostCommon >> 16) & 0xFF);
 	DoInt(20, 30, (mostCommon >> 8) & 0xFF);
 	DoInt(40, 30, mostCommon & 0xFF);
-	lcdRefresh();
+	DoInt(0, 45, (uint32_t) freqChannel);
+    lcdRefresh();
 	//delayms_queue(500);
 
 	return mostHits;
 }
 
 void main_radi0(void) {
-	const uint16_t DATA_LENGTH = 64;			// number of evaluated packets per call of detect
+	const uint16_t DATA_LENGTH = 256;			// number of evaluated packets per call of detect
 	uint16_t max = 0;
 	uint16_t freqHits;
 	uint32_t maxI = 0;
+
+    usbCDCInit();
+    puts_plus("Ready for action\r\n");
 
 	lcdClear();
 	lcdRefresh();
@@ -234,8 +247,8 @@ void main_radi0(void) {
 	nrf_write_reg(0x11, 0x16);					// paket length
 	nrf_write_reg(0x00, 0x70 | 0x03);			// power on, receive on
 
-	for (uint16_t i = 0x0000; i < 0x0080; ++i) {
-		/*freqHits = detect(0x00, i, 0x55, DATA_LENGTH);
+	for (uint16_t i = 0x0000; i <= 0x0080; i++) {
+		freqHits = detect(0x00, i, 0x55, DATA_LENGTH);
 		if (freqHits > max) {
 			max = freqHits;
 			maxI = 4 * i;
@@ -244,8 +257,8 @@ void main_radi0(void) {
 		if (freqHits > max) {
 			max = freqHits;
 			maxI = 4 * i + 1;
-		}*/
-		freqHits = detect(0x0A, i, 0x55, DATA_LENGTH);
+		}
+		/*freqHits = detect(0x0A, i, 0x55, DATA_LENGTH);
 		if (freqHits > max) {
 			max = freqHits;
 			maxI = 4 * i + 2;
@@ -254,7 +267,7 @@ void main_radi0(void) {
 		if (freqHits > max) {
 			max = freqHits;
 			maxI = 4 * i + 3;
-		}
+		}*/
 	}
 
 	lcdClear();
@@ -264,4 +277,5 @@ void main_radi0(void) {
 	DoString(0, 40, "bei Konfig:");
 	DoInt(76, 40, maxI);
 	lcdRefresh();
+    usbCDCOff();
 }
