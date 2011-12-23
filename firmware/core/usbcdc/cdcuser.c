@@ -26,7 +26,7 @@
 #include "cdcuser.h"
 #include "cdc_buf.h"
 
-// unsigned char BulkBufIn  [64];            // Buffer to store USB IN  packet
+//unsigned char BulkBufIn  [64];            // Buffer to store USB IN  packet
 unsigned char BulkBufOut [64];            // Buffer to store USB OUT packet
 unsigned char NotificationBuf [10];
 

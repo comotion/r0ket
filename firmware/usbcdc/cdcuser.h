@@ -60,5 +60,10 @@ extern unsigned short CDC_GetSerialState (void);
 /* flow control */
 extern volatile unsigned char CDC_DepInEmpty;         // DataEndPoint IN empty
 
+
+/* New functions in order to read input */
+
+extern int CDC_GetInputBuffer(char *buffer, int bufferLength);
+
 #endif  /* __CDCUSER_H__ */
 
