@@ -424,13 +424,18 @@ int DoInt(int sx, int sy, int num){
     };
 		
 	for (len=(mxlen-1);len>=0;len--){
-		s[len]=(num%10)+'0';
+		if (num%16 < 10) { // return hex value
+			s[len]=(num%16)+'0';
+		} else {
+			s[len]=(num%16)-10+'A';
+		}
+
 		if(num==0){
 			s[len]=' '; // configurable?
 			o=s+len;
 			break;
 		};
-		num/=10;
+		num/=16;
 	};
 	if(neg==1)
 		*o='-';
