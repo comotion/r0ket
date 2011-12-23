@@ -12,6 +12,7 @@
 #include "filesystem/ff.h"
 #include "filesystem/select.h"
 #include "filesystem/execute.h"
+#include "filesystem/util.h"
 
 #include <string.h>
 
@@ -56,9 +57,9 @@ void simpleNickname(void) {
 /**************************************************************************/
 
 void init_nick(void){
-	readFile("nick.cfg",GLOBAL(nickname),MAXNICK);
-	readFile("font.cfg",GLOBAL(nickfont),FILENAMELEN);
-	readFile("l0nick.cfg",GLOBAL(nickl0),FILENAMELEN);
+	readTextFile("nick.cfg",GLOBAL(nickname),MAXNICK);
+	readTextFile("font.cfg",GLOBAL(nickfont),FILENAMELEN);
+	readTextFile("l0nick.cfg",GLOBAL(nickl0),FILENAMELEN);
 };
 
 //# MENU nick editNick

@@ -10,7 +10,7 @@
 
 // filles files with the filenames matching ext
 // if count is set to 0xff (-1) do not fill files and return the count instead
-int getFiles(char files[][FLEN], uint8_t count, uint16_t skip, char *ext)
+int getFiles(char files[][FLEN], uint8_t count, uint16_t skip, const char *ext)
 {
     DIR dir;                /* Directory object */
     FILINFO Finfo;
@@ -49,7 +49,7 @@ int getFiles(char files[][FLEN], uint8_t count, uint16_t skip, char *ext)
 }
 
 #define PERPAGE 7
-int selectFile(char *filename, char *extension)
+int selectFile(char *filename, const char *extension)
 {
     int skip = 0;
     char key;

@@ -26,10 +26,10 @@ uint8_t lcdShowAnim(char *fname, uint32_t framems) {
     if(res)
         return 1;
 
-    getInputWaitRelease();
-    while(!getInputRaw()){
-        lcdFill(0x55);
-        res = f_read(&file, (char *)lcdBuffer, RESX*RESY_B, &readbytes);
+	getInputWaitRelease();
+	while(!getInputRaw()){
+//        lcdFill(0x55);  // useless, as it will be overwritten anyway by the next instruction  --the_nihilant
+		res = f_read(&file, (char *)lcdBuffer, RESX*RESY_B, &readbytes);
         if(res)
             return -1;
         if(readbytes<RESX*RESY_B){

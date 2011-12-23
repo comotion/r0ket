@@ -8,9 +8,15 @@
 #include "lcd/display.h"
 
 #include "filesystem/ff.h"
+
+#include <string.h>
+
+/**************************************************************************/
+
 #include "usetable.h"
 
-void ram(void) {
+//# MENU config
+void ram(void){
     uint8_t numentries = 0;
     signed char menuselection = 0;
     uint8_t visible_lines = 0;

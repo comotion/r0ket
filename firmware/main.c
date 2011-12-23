@@ -7,10 +7,27 @@
 #include "lcd/render.h"
 #include "filesystem/ff.h"
 
-#ifndef __APPLE__
-__attribute__ ((used, section("crp")))
+#ifdef CRP1
+#define CRP_VALUE 0x12345678  // CRP1
 #endif
-const uint32_t the_crp=0x87654321;
+
+#ifdef CRP2
+#define CRP_VALUE 0x87654321  // CRP2
+#endif
+
+#ifdef CRP3
+#define CRP_VALUE 0x43218765  // CRP3
+#endif
+
+#ifdef NO_ISP
+#define CRP_VALUE 0x4e697370  // NO_ISP
+#endif
+
+#ifndef CRP_VALUE
+#define CRP_VALUE 0x0  // ANY non-magic value disables CRP
+#endif
+
+//__attribute__ ((used, section("crp"))) const uint32_t the_crp=CRP_VALUE;
 
 /**************************************************************************/
 
@@ -29,12 +46,31 @@ int main(void) {
     // initialise basic badge functions
     rbInit();
 
-    fsInit();
   
     lcdInit(); // display
 
     //lcdFill(0);
     lcdDisplay();
+    
+    switch(getInputRaw()){
+        case BTN_ENTER:
+            lcdPrint("ISP active");
+            lcdRefresh();
+            ReinvokeISP();
+            break;
+        case BTN_DOWN:
+            lcdPrint("MSC active");
+            lcdRefresh();
+            usbMSCInit();
+            while(1);
+            break;
+    };
+
+    fsInit();
+
+    if( getInputRaw() == BTN_UP ){ // Reset config
+            saveConfig();
+    }
 
 	wrapper(); // see module/ subdirectory
 }

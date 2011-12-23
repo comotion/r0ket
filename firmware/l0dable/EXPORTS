@@ -40,7 +40,8 @@ ECIES_encyptkeygen
 bitstr_parse_export
 #fs
 f_close
-f_get_rc_string
+#f_get_rc_string
+notimplemented
 f_lseek
 f_open
 f_read
@@ -109,7 +110,7 @@ newmsgcount
 systickGetTicks
 uint32touint8p
 uint8ptouint32
-#Add stuff here
+# vector lib
 o_init
 o_path_new
 o_move_to
@@ -130,5 +131,19 @@ I2CWriteLength
 I2CReadLength
 i2cEngine
 i2cInit
+#stuff
 timer32Callback0
 getFiles
+lcdRead
+lcdInit
+lcdSetCrsr
+lcdSetCrsrX
+getInputWaitRepeat
+applyConfig
+# flame API
+flameDetect
+flameSetBrightness
+flameSetColor
+flameClaim
+flameFree
+#Add stuff here

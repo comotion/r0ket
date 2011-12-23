@@ -26,10 +26,9 @@ void ram(void) {
         dx=0;
     dy=(RESY-getFontHeight())/2;
 
-    lcdClear();
-    lcdSetPixel(1,1,1);
-    DoString(dx,dy,GLOBAL(nickname));
-    lcdRefresh();
+	lcdClear();
+	DoString(dx,dy,GLOBAL(nickname));
+	lcdRefresh();
 
     while(getInputRaw()==BTN_NONE){
         if (GLOBAL(newmsgcount) > msgcount) {

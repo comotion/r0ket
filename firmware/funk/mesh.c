@@ -19,6 +19,13 @@ MPKT meshbuffer[MESHBUFSIZE];
 
 struct NRF_CFG oldconfig;
 
+static int meshgen_gt(char gen){
+    unsigned char dif=meshgen-gen;
+    if(meshgen==0)
+        return 1;
+    return (dif>128);
+};
+
 void initMesh(void){
     for(int i=0;i<MESHBUFSIZE;i++){
         meshbuffer[i].flags=MF_FREE;
@@ -30,10 +37,13 @@ void initMesh(void){
 };
 
 int mesh_sanity(uint8_t * pkt){
+    if(MO_TYPE(pkt)>0x7f || MO_TYPE(pkt)<0x20)
+        return 1;
+
     if(MO_TYPE(pkt)>='A' && MO_TYPE(pkt)<='Z'){
-        if(MO_TIME(pkt)>1313803870)
+        if(MO_TIME(pkt)>1325379600)
             return 1;
-        if(MO_TIME(pkt)<1312075898)
+        if(MO_TIME(pkt)<1324602000)
             return 1;
     }else if(MO_TYPE(pkt)>='a' && MO_TYPE(pkt)<='z'){
         if(MO_TIME(pkt)>16777216)
@@ -41,11 +51,15 @@ int mesh_sanity(uint8_t * pkt){
         if(MO_TIME(pkt)<0)
             return 1;
     };
-    if(MO_TYPE(pkt)=='t'){
-        return 1;
+    if(MO_TYPE(pkt)!='A' && 
+       MO_TYPE(pkt)!='a' && 
+       MO_TYPE(pkt)!='E' && 
+       MO_TYPE(pkt)!='F' && 
+       MO_TYPE(pkt)!='G' && 
+       MO_TYPE(pkt)!='T'
+            ){
+        return 2;
     };
-    if(MO_TYPE(pkt)>0x7f || MO_TYPE(pkt)<0x20)
-        return 1;
     return 0;
 };
 
@@ -90,9 +104,9 @@ void mesh_cleanup(void){
                 if (MO_TIME(meshbuffer[i].pkt)-now>SECS_DAY)
                     meshbuffer[i].flags=MF_FREE;
             };
-            if(mesh_sanity(meshbuffer[i].pkt)){
+            if(mesh_sanity(meshbuffer[i].pkt)==1){
                 meshbuffer[i].flags=MF_FREE;
-#if 1
+#if 0
                 setSystemFont();
                 lcdClear();
                 lcdPrintln("MESH PANIC!");
@@ -148,7 +162,7 @@ void mesh_sendloop(void){
         };
         ctr++;
         memcpy(buf,meshbuffer[i].pkt,MESHPKTSIZE);
-        status=nrf_snd_pkt_crc_encr(MESHPKTSIZE,buf,meshkey);
+        status=nrf_snd_pkt_crc_encr(MESHPKTSIZE,buf,NULL);
         //Check status? But what would we do...
     };
 
@@ -185,7 +199,7 @@ uint8_t mesh_recvqloop_work(void){
     __attribute__ ((aligned (4))) uint8_t buf[32];
     int len;
 
-        len=nrf_rcv_pkt_poll_dec(sizeof(buf),buf,meshkey);
+        len=nrf_rcv_pkt_poll_dec(sizeof(buf),buf,NULL);
 
         // Receive
         if(len<=0){
@@ -197,22 +211,15 @@ uint8_t mesh_recvqloop_work(void){
             return 0;
         };
 
-        if(MO_GEN(buf) == 0xff) {
-            /* maximum mesh-gen reached, reset to 0
-             *  this way all new clients always get reset to 0
-             *  until all clients are at 0 */
-            meshgen = meshincctr = meshnice = 0;
-        } else if(MO_GEN(buf) > meshgen){
-            if(meshgen)
-                meshgen++;
-            else
+        // New mesh generation?
+        if(MO_TYPE(buf)=='T'){
+            if(meshgen_gt(MO_GEN(buf))){
                 meshgen=MO_GEN(buf);
-            _timet=0;
-            meshincctr=0;
-            meshnice=0;
-        };
-
-        if(MO_TYPE(buf)=='T'){ // time update
+                _timet=0;
+                meshincctr=0;
+                meshnice=0;
+            };
+            // Set new time iff newer
             time_t toff=MO_TIME(buf)-((getTimer()+(600/SYSTICKSPEED))/(1000/SYSTICKSPEED));
             if (toff>_timet){ // Do not live in the past.
                 _timet = toff;
@@ -223,12 +230,18 @@ uint8_t mesh_recvqloop_work(void){
             return 1;
         };
 
+        // Discard packets with wrong generation
+        if(meshgen != MO_GEN(buf)){
+            return 0;
+        };
+
         // Safety: Truncate ascii packets by 0-ing the CRC
         buf[MESHPKTSIZE-2]=0;
 
         // Store packet in a same/free slot
         MPKT* mpkt=meshGetMessage(MO_TYPE(buf));
 
+#if 0
         // Schnitzel
         if(MO_TYPE(buf)=='Z'){
             // the packet is locked, it will not be sent!
@@ -253,15 +266,18 @@ uint8_t mesh_recvqloop_work(void){
             };
             return 1;
         };
+#endif
 
         // only accept newer/better packets
         if(mpkt->flags==MF_USED)
             if(MO_TIME(buf)<=MO_TIME(mpkt->pkt))
                 return 2;
 
+#if 0
         if((MO_TYPE(buf)>='A' && MO_TYPE(buf)<='C') ||
                 (MO_TYPE(buf)>='a' && MO_TYPE(buf)<='c'))
                     meshmsg=1;
+#endif
 
         memcpy(mpkt->pkt,buf,MESHPKTSIZE);
         mpkt->flags=MF_USED;
@@ -310,12 +326,8 @@ uint8_t mesh_recvloop_plus(uint8_t state){
                 delayms_power(10);
             };
             if(getTimer()>recvend || pktctr>MESHBUFSIZE)
-                state=0xff;
+                state=QS_END;
     };
-    if(state==0xff){
-        return 0xff;
-    };
-
     return state;
 };
 
