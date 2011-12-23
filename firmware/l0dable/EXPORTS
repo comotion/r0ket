@@ -148,3 +148,4 @@ flameClaim
 flameFree
 #Add stuff here
 timer32Callback0
+usbMSCenabled
