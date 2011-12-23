@@ -63,6 +63,26 @@ int mesh_sanity(uint8_t * pkt){
     return 0;
 };
 
+int mesh_sanity(uint8_t * pkt){
+    if(MO_TYPE(pkt)>='A' && MO_TYPE(pkt)<='Z'){
+        if(MO_TIME(pkt)>1313803870)
+            return 1;
+        if(MO_TIME(pkt)<1312075898)
+            return 1;
+    }else if(MO_TYPE(pkt)>='a' && MO_TYPE(pkt)<='z'){
+        if(MO_TIME(pkt)>16777216)
+            return 1;
+        if(MO_TIME(pkt)<0)
+            return 1;
+    };
+    if(MO_TYPE(pkt)=='t'){
+        return 1;
+    };
+    if(MO_TYPE(pkt)>0x7f || MO_TYPE(pkt)<0x20)
+        return 1;
+    return 0;
+};
+
 MPKT * meshGetMessage(uint8_t type){
     int free=-1;
     for(int i=0;i<MESHBUFSIZE;i++){

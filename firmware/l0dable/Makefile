@@ -77,6 +77,9 @@ config.int: config.c0d .PHONY
 initanim.int: initanim.c0d .PHONY
 	mv $< $@
 
+config.int: config.c0d .PHONY
+	mv $< $@
+
 clean:
 	rm -f *.o *.elf *.bin *.int *.c0d *.nik usetable.h
 

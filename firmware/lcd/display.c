@@ -314,7 +314,6 @@ inline void lcdInvert(void) {
 }
 
 void lcdSetContrast(int c) {
-    lcd_select();
     if(displayType==DISPLAY_N1200){
         if(c<0x1F)
             lcdWrite(TYPE_CMD,0x80+c);
@@ -325,6 +324,14 @@ void lcdSetContrast(int c) {
         };
     }
     lcd_deselect();
+    #else
+    if(c>=0x40)
+        return;
+    lcd_select();
+    lcdWrite(TYPE_CMD,0x25);
+    lcdWrite(TYPE_DATA,4*c);
+    lcd_deselect();
+    #endif
 };
 
 void lcdSetInvert(int c) {
