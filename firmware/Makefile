@@ -24,6 +24,7 @@ LIBS += usb/libusb.a
 LIBS += funk/libfunk.a
 LIBS += usbcdc/libusbcdc.a
 LIBS += flame/libflame.a
+LIBS += avr/libavr.a
 
 ##########################################################################
 # GNU GCC compiler flags
@@ -47,6 +48,7 @@ LDLIBS += -Lbasic -lbasic
 LDLIBS += -Llcd -llcd
 LDLIBS += -Lcore -lcore
 LDLIBS += -Lusb -lusb
+LDLIBS += -Lavr -lavr
 LDLIBS += -lbasic
 LDLIBS += -lfunk
 LDLIBS += -lm -Lflame -lflame
