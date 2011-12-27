@@ -65,19 +65,13 @@ endif
 1boot.int: 1boot.c0d .PHONY
 	mv $< $@
 
-#debug.int: debug.c0d .PHONY
-#	mv $< $@
-
-config.int: config.c0d .PHONY
+debug.int: debug.c0d .PHONY
 	mv $< $@
 
 config.int: config.c0d .PHONY
 	mv $< $@
 
 initanim.int: initanim.c0d .PHONY
-	mv $< $@
-
-config.int: config.c0d .PHONY
 	mv $< $@
 
 clean:

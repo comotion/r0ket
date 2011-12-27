@@ -22,8 +22,8 @@ LIBS += applications/libapp.a
 LIBS += filesystem/libfat.a
 LIBS += usb/libusb.a
 LIBS += funk/libfunk.a
-LIBS += usbcdc/libusbcdc.a
-LIBS += flame/libflame.a
+#LIBS += usbcdc/libusbcdc.a
+#LIBS += flame/libflame.a
 LIBS += avr/libavr.a
 
 ##########################################################################
@@ -42,16 +42,17 @@ OBJS += lpc1xxx/$(TARGET)_handlers.o lpc1xxx/LPC1xxx_startup.o
 ##########################################################################
 LDLIBS = -Lapplications -lapp
 LDLIBS += -Lfunk -lfunk
-LDLIBS += -Lusbcdc -lusbcdc
+#LDLIBS += -Lusbcdc -lusbcdc
 LDLIBS += -Lfilesystem -lfat
 LDLIBS += -Lbasic -lbasic
 LDLIBS += -Llcd -llcd
 LDLIBS += -Lcore -lcore
 LDLIBS += -Lusb -lusb
-LDLIBS += -Lavr -lavr
+#LDLIBS += -Lavr -lavr
 LDLIBS += -lbasic
 LDLIBS += -lfunk
-LDLIBS += -lm -Lflame -lflame
+LDLIBS += -lm
+#LDLIBS += -Lflame -lflame
 OCFLAGS = --strip-unneeded
 
 SUBDIRS?= $(foreach lib,$(LIBS),$(dir $(lib)))

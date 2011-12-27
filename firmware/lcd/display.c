@@ -324,14 +324,6 @@ void lcdSetContrast(int c) {
         };
     }
     lcd_deselect();
-    #else
-    if(c>=0x40)
-        return;
-    lcd_select();
-    lcdWrite(TYPE_CMD,0x25);
-    lcdWrite(TYPE_DATA,4*c);
-    lcd_deselect();
-    #endif
 };
 
 void lcdSetInvert(int c) {

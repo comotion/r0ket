@@ -119,18 +119,12 @@ o_curve_to
 o_close
 o_set_gray
 o_fill
-o_stroke
-o_set_line_width
+#o_stroke
+#o_set_line_width
 o_set_shader
 o_identity
 o_transform
 #I2C
-I2CMasterBuffer
-I2CSlaveBuffer
-I2CWriteLength
-I2CReadLength
-i2cEngine
-i2cInit
 #stuff
 timer32Callback0
 getFiles
@@ -141,11 +135,12 @@ lcdSetCrsrX
 getInputWaitRepeat
 applyConfig
 # flame API
-flameDetect
-flameSetBrightness
-flameSetColor
-flameClaim
-flameFree
+#flameDetect
+#flameSetBrightness
+#flameSetColor
+#flameClaim
+#flameFree
 #Add stuff here
-timer32Callback0
-usbMSCenabled
+#timer32Callback0
+#usbMSCenabled
+
